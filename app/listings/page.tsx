@@ -21,6 +21,19 @@ function ListingsContent() {
     page: parseInt(searchParams.get('page') || '1'),
   })
 
+  // Sync filters when URL changes (e.g. clicking navbar category links)
+  useEffect(() => {
+    setFilters({
+      q: searchParams.get('q') || '',
+      category: searchParams.get('category') || '',
+      city: searchParams.get('city') || '',
+      min_price: searchParams.get('min_price') || '',
+      max_price: searchParams.get('max_price') || '',
+      sort: searchParams.get('sort') || 'newest',
+      page: parseInt(searchParams.get('page') || '1'),
+    })
+  }, [searchParams])
+
   useEffect(() => {
     fetch('/api/categories').then(r => r.json()).then(d => setCategories(d.data || []))
   }, [])
