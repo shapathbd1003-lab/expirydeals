@@ -31,6 +31,9 @@ function RegisterForm() {
 
     if (!res.ok) {
       setError(data.error?.message || 'Registration failed')
+    } else if (data.data?.auto_verified) {
+      // No email service — go straight to login
+      router.push('/login?registered=1')
     } else {
       setSuccess(true)
     }

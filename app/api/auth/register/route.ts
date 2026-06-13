@@ -40,6 +40,15 @@ export async function POST(req: NextRequest) {
       },
     })
 
+    // If no email service configured, auto-verify so users can log in immediately
+    if (!process.env.RESEND_API_KEY) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { emailVerified: true, status: 'active' },
+      })
+      return ok({ message: 'Account created! You can now log in.', auto_verified: true }, 201)
+    }
+
     const token = generateVerificationToken()
     await prisma.emailVerification.create({
       data: {
