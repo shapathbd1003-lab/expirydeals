@@ -176,9 +176,24 @@ export default function EditListingPage() {
           {existingPhotos.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
               {existingPhotos.map((p: any) => (
-                <img key={p.id} src={p.urlThumb} alt="" className="w-16 h-16 rounded object-cover border border-gray-200" />
+                <div key={p.id} className="relative w-16 h-16">
+                  <img src={p.urlThumb} alt="" className="w-16 h-16 rounded object-cover border border-gray-200" />
+                  <button type="button"
+                    onClick={async () => {
+                      if (!confirm('Delete this photo?')) return
+                      const headers: any = {}
+                      if (token) headers.Authorization = `Bearer ${token}`
+                      await fetch(`/api/seller/listings/${id}/photos/${p.id}`, {
+                        method: 'DELETE', headers, credentials: 'include',
+                      })
+                      setExistingPhotos(prev => prev.filter(x => x.id !== p.id))
+                    }}
+                    className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow">
+                    ✕
+                  </button>
+                </div>
               ))}
-              <p className="text-xs text-gray-400 w-full">{existingPhotos.length} existing photo(s)</p>
+              <p className="text-xs text-gray-400 w-full">{existingPhotos.length} photo(s) — click ✕ to delete</p>
             </div>
           )}
           <p className="text-xs text-gray-500 mb-2">Add more images by pasting URLs below:</p>
