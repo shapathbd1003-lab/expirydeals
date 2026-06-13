@@ -12,6 +12,9 @@ export default function EditListingPage() {
   const [categories, setCategories] = useState<any[]>([])
   const [existingPhotos, setExistingPhotos] = useState<any[]>([])
   const [imageUrls, setImageUrls] = useState<string[]>([''])
+  const [newFiles, setNewFiles] = useState<File[]>([])
+  const [newPreviews, setNewPreviews] = useState<string[]>([])
+  const [photoTab, setPhotoTab] = useState<'upload' | 'url'>('upload')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -77,6 +80,17 @@ export default function EditListingPage() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.message || 'Failed to save'); return }
+
+      // Upload files from PC
+      if (newFiles.length > 0) {
+        const fd = new FormData()
+        newFiles.forEach(f => fd.append('photos', f))
+        const fHeaders: any = {}
+        if (token) fHeaders.Authorization = `Bearer ${token}`
+        await fetch(`/api/seller/listings/${id}/photos`, {
+          method: 'POST', headers: fHeaders, credentials: 'include', body: fd,
+        })
+      }
 
       // Save new image URLs if any
       const validUrls = imageUrls.filter(u => u.trim().startsWith('http'))
@@ -173,6 +187,8 @@ export default function EditListingPage() {
         {/* Photos */}
         <div>
           <label className="label">Photos</label>
+
+          {/* Existing photos */}
           {existingPhotos.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
               {existingPhotos.map((p: any) => (
@@ -181,10 +197,10 @@ export default function EditListingPage() {
                   <button type="button"
                     onClick={async () => {
                       if (!confirm('Delete this photo?')) return
-                      const headers: any = {}
-                      if (token) headers.Authorization = `Bearer ${token}`
+                      const h: any = {}
+                      if (token) h.Authorization = `Bearer ${token}`
                       await fetch(`/api/seller/listings/${id}/photos/${p.id}`, {
-                        method: 'DELETE', headers, credentials: 'include',
+                        method: 'DELETE', headers: h, credentials: 'include',
                       })
                       setExistingPhotos(prev => prev.filter(x => x.id !== p.id))
                     }}
@@ -196,35 +212,79 @@ export default function EditListingPage() {
               <p className="text-xs text-gray-400 w-full">{existingPhotos.length} photo(s) — click ✕ to delete</p>
             </div>
           )}
-          <p className="text-xs text-gray-500 mb-2">Add more images by pasting URLs below:</p>
-          <div className="space-y-2">
-            {imageUrls.map((url, i) => (
-              <div key={i} className="flex gap-2 items-center">
-                <input
-                  className="input flex-1 text-sm"
-                  placeholder="Paste image URL starting with https://"
-                  value={url}
-                  onChange={e => {
-                    const next = [...imageUrls]
-                    next[i] = e.target.value
-                    setImageUrls(next)
-                  }}
-                />
-                {url.trim().startsWith('http') && (
-                  <img src={url} alt="" className="w-10 h-10 rounded object-cover border border-gray-200 flex-shrink-0"
-                    onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                )}
-                {imageUrls.length > 1 && (
-                  <button type="button" onClick={() => setImageUrls(u => u.filter((_, j) => j !== i))}
-                    className="text-red-400 hover:text-red-600 flex-shrink-0">✕</button>
+
+          {/* Tab toggle */}
+          <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit mb-3">
+            <button type="button" onClick={() => setPhotoTab('upload')}
+              className={`px-3 py-1 rounded text-sm font-medium transition ${photoTab === 'upload' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
+              📁 Upload from PC
+            </button>
+            <button type="button" onClick={() => setPhotoTab('url')}
+              className={`px-3 py-1 rounded text-sm font-medium transition ${photoTab === 'url' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
+              🔗 Paste URL
+            </button>
+          </div>
+
+          {photoTab === 'upload' && (
+            <div>
+              <div className="flex flex-wrap gap-2">
+                {newPreviews.map((src, i) => (
+                  <div key={i} className="relative w-16 h-16 rounded-lg overflow-hidden">
+                    <img src={src} alt="" className="w-full h-full object-cover" />
+                    <button type="button" onClick={() => {
+                      setNewFiles(f => f.filter((_, j) => j !== i))
+                      setNewPreviews(p => p.filter((_, j) => j !== i))
+                    }} className="absolute top-0.5 right-0.5 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">✕</button>
+                  </div>
+                ))}
+                {newFiles.length < 8 - existingPhotos.length && (
+                  <label className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-green-500 text-gray-400 gap-0.5">
+                    <span className="text-xl">+</span>
+                    <span className="text-xs">Add</span>
+                    <input type="file" accept="image/*" multiple className="hidden" onChange={e => {
+                      const files = Array.from(e.target.files || []).slice(0, 8 - existingPhotos.length - newFiles.length)
+                      setNewFiles(f => [...f, ...files])
+                      files.forEach(f => {
+                        const reader = new FileReader()
+                        reader.onload = ev => setNewPreviews(p => [...p, ev.target?.result as string])
+                        reader.readAsDataURL(f)
+                      })
+                    }} />
+                  </label>
                 )}
               </div>
-            ))}
-            {imageUrls.length < 8 - existingPhotos.length && (
-              <button type="button" onClick={() => setImageUrls(u => [...u, ''])}
-                className="text-sm text-green-600 hover:underline">+ Add another URL</button>
-            )}
-          </div>
+              <p className="text-xs text-gray-400 mt-2">{newFiles.length} new file(s) selected</p>
+            </div>
+          )}
+
+          {photoTab === 'url' && (
+            <div className="space-y-2">
+              {imageUrls.map((url, i) => (
+                <div key={i} className="flex gap-2 items-center">
+                  <input className="input flex-1 text-sm"
+                    placeholder="Paste image URL starting with https://"
+                    value={url}
+                    onChange={e => {
+                      const next = [...imageUrls]
+                      next[i] = e.target.value
+                      setImageUrls(next)
+                    }} />
+                  {url.trim().startsWith('http') && (
+                    <img src={url} alt="" className="w-10 h-10 rounded object-cover border border-gray-200 flex-shrink-0"
+                      onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                  )}
+                  {imageUrls.length > 1 && (
+                    <button type="button" onClick={() => setImageUrls(u => u.filter((_, j) => j !== i))}
+                      className="text-red-400 hover:text-red-600 flex-shrink-0">✕</button>
+                  )}
+                </div>
+              ))}
+              {imageUrls.length < 8 - existingPhotos.length && (
+                <button type="button" onClick={() => setImageUrls(u => [...u, ''])}
+                  className="text-sm text-green-600 hover:underline">+ Add another URL</button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex gap-3 pt-2">
