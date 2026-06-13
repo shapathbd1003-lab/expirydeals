@@ -16,7 +16,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (listing.sellerId !== auth.user.userId) return unauthorized()
 
     const body = await req.json()
-    const urls: string[] = (body.urls || []).filter((u: string) => typeof u === 'string' && u.trim().startsWith('http'))
+    const urls: string[] = (body.urls || []).filter((u: string) => typeof u === 'string' && (u.trim().startsWith('http') || u.trim().startsWith('data:image/')))
     if (!urls.length) return validationError('No valid URLs provided')
 
     const existing = listing.photos.length

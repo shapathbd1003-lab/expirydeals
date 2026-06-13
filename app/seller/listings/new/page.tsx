@@ -60,15 +60,19 @@ export default function NewListingPage() {
 
     const listingId = data.data.id
 
-    // Upload file photos
+    // Save PC files as data URLs (no storage service needed)
     if (photos.length > 0) {
-      const fd = new FormData()
-      photos.forEach(p => fd.append('photos', p))
-      await fetch(`/api/seller/listings/${listingId}/photos`, {
+      const dataUrls = await Promise.all(photos.map(f => new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = e => resolve(e.target?.result as string)
+        reader.onerror = reject
+        reader.readAsDataURL(f)
+      })))
+      await fetch(`/api/seller/listings/${listingId}/photo-urls`, {
         method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         credentials: 'include',
-        body: fd,
+        body: JSON.stringify({ urls: dataUrls }),
       })
     }
 

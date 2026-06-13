@@ -81,14 +81,19 @@ export default function EditListingPage() {
       const data = await res.json()
       if (!res.ok) { setError(data.message || 'Failed to save'); return }
 
-      // Upload files from PC
+      // Save PC files as data URLs (no storage service needed)
       if (newFiles.length > 0) {
-        const fd = new FormData()
-        newFiles.forEach(f => fd.append('photos', f))
-        const fHeaders: any = {}
-        if (token) fHeaders.Authorization = `Bearer ${token}`
-        await fetch(`/api/seller/listings/${id}/photos`, {
-          method: 'POST', headers: fHeaders, credentials: 'include', body: fd,
+        const dataUrls = await Promise.all(newFiles.map(f => new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = e => resolve(e.target?.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(f)
+        })))
+        await fetch(`/api/seller/listings/${id}/photo-urls`, {
+          method: 'POST',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ urls: dataUrls }),
         })
       }
 
