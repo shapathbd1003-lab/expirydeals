@@ -67,9 +67,58 @@ function ListingsContent() {
             </select>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900 mb-2 text-sm">City</h3>
-            <input type="text" className="input" placeholder="e.g. Berlin"
-              value={filters.city} onChange={(e) => applyFilters({ city: e.target.value })} />
+            <h3 className="font-semibold text-gray-900 mb-2 text-sm">Location</h3>
+            <select className="input" value={filters.city} onChange={(e) => applyFilters({ city: e.target.value })}>
+              <option value="">All Locations</option>
+              <optgroup label="── Dhaka Division ──">
+                <option value="Dhaka">Dhaka</option>
+                <option value="Gazipur">Gazipur</option>
+                <option value="Narayanganj">Narayanganj</option>
+                <option value="Manikganj">Manikganj</option>
+                <option value="Munshiganj">Munshiganj</option>
+                <option value="Narsingdi">Narsingdi</option>
+              </optgroup>
+              <optgroup label="── Chittagong Division ──">
+                <option value="Chittagong">Chittagong</option>
+                <option value="Cox's Bazar">Cox's Bazar</option>
+                <option value="Comilla">Comilla</option>
+                <option value="Feni">Feni</option>
+                <option value="Noakhali">Noakhali</option>
+              </optgroup>
+              <optgroup label="── Sylhet Division ──">
+                <option value="Sylhet">Sylhet</option>
+                <option value="Moulvibazar">Moulvibazar</option>
+                <option value="Habiganj">Habiganj</option>
+                <option value="Sunamganj">Sunamganj</option>
+              </optgroup>
+              <optgroup label="── Rajshahi Division ──">
+                <option value="Rajshahi">Rajshahi</option>
+                <option value="Bogura">Bogura</option>
+                <option value="Pabna">Pabna</option>
+                <option value="Natore">Natore</option>
+              </optgroup>
+              <optgroup label="── Khulna Division ──">
+                <option value="Khulna">Khulna</option>
+                <option value="Jessore">Jessore</option>
+                <option value="Barisal">Barisal</option>
+                <option value="Satkhira">Satkhira</option>
+              </optgroup>
+              <optgroup label="── Mymensingh Division ──">
+                <option value="Mymensingh">Mymensingh</option>
+                <option value="Jamalpur">Jamalpur</option>
+                <option value="Netrokona">Netrokona</option>
+              </optgroup>
+              <optgroup label="── Rangpur Division ──">
+                <option value="Rangpur">Rangpur</option>
+                <option value="Dinajpur">Dinajpur</option>
+                <option value="Kurigram">Kurigram</option>
+              </optgroup>
+              <optgroup label="── Barishal Division ──">
+                <option value="Barishal">Barishal</option>
+                <option value="Patuakhali">Patuakhali</option>
+                <option value="Bhola">Bhola</option>
+              </optgroup>
+            </select>
           </div>
           <div>
             <h3 className="font-semibold text-gray-900 mb-2 text-sm">Price Range (৳)</h3>

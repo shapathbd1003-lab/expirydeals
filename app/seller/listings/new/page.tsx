@@ -183,7 +183,17 @@ export default function NewListingPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <label className="label">City <span className="text-red-500">*</span></label>
-                <input className="input" required value={form.city} onChange={e => setForm({...form, city: e.target.value})} />
+                <select className="input" required value={form.city} onChange={e => setForm({...form, city: e.target.value})}>
+                  <option value="">Select city...</option>
+                  <optgroup label="── Dhaka Division ──"><option>Dhaka</option><option>Gazipur</option><option>Narayanganj</option><option>Manikganj</option><option>Munshiganj</option><option>Narsingdi</option></optgroup>
+                  <optgroup label="── Chittagong Division ──"><option>Chittagong</option><option>Cox's Bazar</option><option>Comilla</option><option>Feni</option><option>Noakhali</option></optgroup>
+                  <optgroup label="── Sylhet Division ──"><option>Sylhet</option><option>Moulvibazar</option><option>Habiganj</option><option>Sunamganj</option></optgroup>
+                  <optgroup label="── Rajshahi Division ──"><option>Rajshahi</option><option>Bogura</option><option>Pabna</option><option>Natore</option></optgroup>
+                  <optgroup label="── Khulna Division ──"><option>Khulna</option><option>Jessore</option><option>Satkhira</option></optgroup>
+                  <optgroup label="── Mymensingh Division ──"><option>Mymensingh</option><option>Jamalpur</option><option>Netrokona</option></optgroup>
+                  <optgroup label="── Rangpur Division ──"><option>Rangpur</option><option>Dinajpur</option><option>Kurigram</option></optgroup>
+                  <optgroup label="── Barishal Division ──"><option>Barishal</option><option>Patuakhali</option><option>Bhola</option></optgroup>
+                </select>
               </div>
               <div>
                 <label className="label">Region</label>
