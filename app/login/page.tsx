@@ -39,6 +39,24 @@ export default function LoginPage() {
           <p className="text-gray-500 text-sm mt-1">Log in to your ExpiryDeals account</p>
         </div>
 
+        {/* Test credentials */}
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4 text-xs text-blue-800 space-y-2">
+          <p className="font-bold text-blue-900 mb-1">🧪 Test Accounts</p>
+          {[
+            { role: 'Buyer', email: 'buyer@test.com', pass: 'Test@1234' },
+            { role: 'Seller', email: 'seller@test.com', pass: 'Test@1234' },
+            { role: 'Admin', email: 'admin@expirydeals.com', pass: 'Admin@123456' },
+          ].map(({ role, email, pass }) => (
+            <button key={role} type="button"
+              onClick={() => setForm({ email, password: pass })}
+              className="w-full text-left flex items-center justify-between bg-white border border-blue-200 rounded-lg px-3 py-2 hover:bg-blue-50 transition">
+              <span><span className="font-semibold">{role}:</span> {email}</span>
+              <span className="text-blue-500 font-mono">{pass}</span>
+            </button>
+          ))}
+          <p className="text-blue-500 text-center">Click any row to auto-fill</p>
+        </div>
+
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
           {error && (
             <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg">{error}</div>
