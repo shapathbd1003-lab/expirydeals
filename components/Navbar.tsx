@@ -50,12 +50,6 @@ export function Navbar() {
                 <Link href="/login" className="text-sm text-gray-600 hover:text-green-600 font-medium">Log in</Link>
                 <Link href="/register" className="btn-primary">Register</Link>
               </>
-            ) : user.role === 'seller' ? (
-              <>
-                <Link href="/seller/dashboard" className="text-sm text-gray-600 hover:text-green-600 font-medium">My Ads</Link>
-                <Link href="/seller/listings/new" className="btn-primary">+ Post Ad</Link>
-                <button onClick={logout} className="text-sm text-gray-400 hover:text-red-500">Log out</button>
-              </>
             ) : user.role === 'admin' ? (
               <>
                 <Link href="/admin" className="text-sm text-gray-600 hover:text-green-600 font-medium">Admin</Link>
@@ -63,8 +57,9 @@ export function Navbar() {
               </>
             ) : (
               <>
-                <Link href="/buyer/favorites" className="text-sm text-gray-600 hover:text-green-600 font-medium">Saved</Link>
-                <Link href="/buyer/dashboard" className="text-sm text-gray-600 hover:text-green-600 font-medium">My Account</Link>
+                <Link href="/my/favorites" className="text-sm text-gray-600 hover:text-green-600 font-medium">Saved</Link>
+                <Link href="/my/listings" className="text-sm text-gray-600 hover:text-green-600 font-medium">My Ads</Link>
+                <Link href="/seller/listings/new" className="btn-primary">+ Post Ad</Link>
                 <button onClick={logout} className="text-sm text-gray-400 hover:text-red-500">Log out</button>
               </>
             )}
@@ -111,15 +106,15 @@ export function Navbar() {
             </>
           ) : (
             <>
-              {user.role === 'seller' && <>
-                <Link href="/seller/dashboard" onClick={() => setMenuOpen(false)} className="block text-sm text-gray-700 py-1.5">My Ads</Link>
-                <Link href="/seller/listings/new" onClick={() => setMenuOpen(false)} className="block btn-primary text-center">+ Post Ad</Link>
-              </>}
-              {user.role === 'buyer' && <>
-                <Link href="/buyer/dashboard" onClick={() => setMenuOpen(false)} className="block text-sm text-gray-700 py-1.5">My Account</Link>
-                <Link href="/buyer/favorites" onClick={() => setMenuOpen(false)} className="block text-sm text-gray-700 py-1.5">Saved Ads</Link>
-              </>}
-              {user.role === 'admin' && <Link href="/admin" onClick={() => setMenuOpen(false)} className="block text-sm text-gray-700 py-1.5">Admin</Link>}
+              {user.role === 'admin' ? (
+                <Link href="/admin" onClick={() => setMenuOpen(false)} className="block text-sm text-gray-700 py-1.5">Admin Panel</Link>
+              ) : (
+                <>
+                  <Link href="/my/listings" onClick={() => setMenuOpen(false)} className="block text-sm text-gray-700 py-1.5">My Ads</Link>
+                  <Link href="/my/favorites" onClick={() => setMenuOpen(false)} className="block text-sm text-gray-700 py-1.5">Saved Ads</Link>
+                  <Link href="/seller/listings/new" onClick={() => setMenuOpen(false)} className="block btn-primary text-center">+ Post Ad</Link>
+                </>
+              )}
               <button onClick={() => { logout(); setMenuOpen(false) }} className="block text-sm text-red-500 py-1.5">Log out</button>
             </>
           )}

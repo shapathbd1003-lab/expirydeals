@@ -25,8 +25,7 @@ export default function LoginPage() {
       const data = await res.json()
       const role = data?.data?.role
       if (role === 'admin') router.push('/admin')
-      else if (role === 'seller') router.push('/seller/dashboard')
-      else router.push('/buyer/dashboard')
+      else router.push('/my/listings')
     }
   }
 

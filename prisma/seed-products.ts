@@ -39,7 +39,7 @@ async function main() {
     seller = await prisma.user.create({
       data: {
         email: 'seller@test.com', passwordHash,
-        fullName: 'Rahim Superstore', role: 'seller', status: 'active', emailVerified: true,
+        fullName: 'Rahim Superstore', role: 'user', status: 'active', emailVerified: true,
         phone: '01711234567', businessName: 'Rahim Superstore',
         businessCity: 'Dhaka', businessRegion: 'Dhaka Division',
       },
@@ -54,7 +54,7 @@ async function main() {
     buyer = await prisma.user.create({
       data: {
         email: 'buyer@test.com', passwordHash,
-        fullName: 'Karim Ahmed', role: 'buyer', status: 'active', emailVerified: true,
+        fullName: 'Karim Ahmed', role: 'user', status: 'active', emailVerified: true,
         phone: '01799887766',
       },
     })

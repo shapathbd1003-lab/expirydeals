@@ -68,7 +68,8 @@ export async function requireAuth(req: NextRequest, role?: string) {
   if (!user) {
     return { error: 'UNAUTHORIZED', status: 401 }
   }
-  if (role && user.role !== role) {
+  // Only enforce role for 'admin' checks — all other routes allow any logged-in user
+  if (role === 'admin' && user.role !== 'admin') {
     return { error: 'FORBIDDEN', status: 403 }
   }
   return { user }

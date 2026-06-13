@@ -7,19 +7,13 @@ import { ok, conflict, validationError, serverError } from '@/lib/response'
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { email, password, full_name, phone, role, business_name, business_city, business_region } = body
+    const { email, password, full_name, phone } = body
 
-    if (!email || !password || !full_name || !role) {
-      return validationError('email, password, full_name, and role are required')
-    }
-    if (!['buyer', 'seller'].includes(role)) {
-      return validationError('role must be buyer or seller')
+    if (!email || !password || !full_name) {
+      return validationError('email, password, and full_name are required')
     }
     if (password.length < 8) {
       return validationError('password must be at least 8 characters')
-    }
-    if (role === 'seller' && !business_name) {
-      return validationError('business_name is required for sellers')
     }
 
     const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } })
@@ -30,17 +24,13 @@ export async function POST(req: NextRequest) {
       data: {
         email: email.toLowerCase(),
         passwordHash,
-        role,
+        role: 'user',
         fullName: full_name,
         phone: phone || null,
-        businessName: business_name || null,
-        businessCity: business_city || null,
-        businessRegion: business_region || null,
         status: 'pending_verification',
       },
     })
 
-    // If no email service configured, auto-verify so users can log in immediately
     if (!process.env.RESEND_API_KEY) {
       await prisma.user.update({
         where: { id: user.id },
@@ -59,7 +49,6 @@ export async function POST(req: NextRequest) {
     })
 
     await sendVerificationEmail(user.email, token, user.fullName)
-
     return ok({ message: 'Verification email sent. Please check your inbox.' }, 201)
   } catch (e) {
     console.error(e)
