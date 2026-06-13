@@ -91,11 +91,18 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     if ('error' in auth) return unauthorized()
 
     const listing = await prisma.listing.findUnique({ where: { id: params.id } })
-    if (!listing || listing.status === 'deleted') return notFound('Listing not found')
+    if (!listing) return notFound('Listing not found')
     if (listing.sellerId !== auth.user.userId) return forbidden()
 
-    await prisma.listing.update({ where: { id: params.id }, data: { status: 'deleted' } })
+    if (listing.status === 'deleted') {
+      // Already soft-deleted — permanently remove from DB
+      await prisma.listingPhoto.deleteMany({ where: { listingId: params.id } })
+      await prisma.listing.delete({ where: { id: params.id } })
+      return ok({ message: 'Listing permanently deleted.' })
+    }
 
+    // First delete — soft delete
+    await prisma.listing.update({ where: { id: params.id }, data: { status: 'deleted' } })
     return ok({ message: 'Listing deleted.' })
   } catch (e) {
     console.error(e)

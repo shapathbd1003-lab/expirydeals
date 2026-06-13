@@ -47,8 +47,11 @@ export default function MyListingsPage() {
     setListings(ls => ls.filter(l => l.id !== id))
   }
 
-  const deleteListing = async (id: string) => {
-    if (!confirm('Delete this listing?')) return
+  const deleteListing = async (id: string, alreadyDeleted: boolean) => {
+    const msg = alreadyDeleted
+      ? 'Permanently remove this listing from the database? This cannot be undone.'
+      : 'Move this listing to deleted?'
+    if (!confirm(msg)) return
     await fetch(`/api/seller/listings/${id}`, {
       method: 'DELETE',
       headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -119,7 +122,10 @@ export default function MyListingsPage() {
                     </button>
                   )}
                   {tab !== 'deleted' && (
-                    <button onClick={() => deleteListing(l.id)} className="text-xs text-red-500 hover:underline py-1">Delete</button>
+                    <button onClick={() => deleteListing(l.id, false)} className="text-xs text-red-500 hover:underline py-1">Delete</button>
+                  )}
+                  {tab === 'deleted' && (
+                    <button onClick={() => deleteListing(l.id, true)} className="text-xs text-red-600 font-medium hover:underline py-1">Remove permanently</button>
                   )}
                 </div>
               </div>
