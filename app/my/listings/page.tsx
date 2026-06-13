@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 
@@ -97,7 +96,8 @@ export default function MyListingsPage() {
             <div key={l.id} className="bg-white rounded-xl border border-gray-200 p-4 flex gap-4 items-start">
               <div className="w-16 h-16 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
                 {l.photos?.[0]
-                  ? <Image src={l.photos[0].urlThumb} alt="" width={64} height={64} className="object-cover w-full h-full" />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={l.photos[0].urlThumb} alt="" className="object-cover w-full h-full" />
                   : <div className="w-full h-full flex items-center justify-center text-2xl">📦</div>}
               </div>
               <div className="flex-1 min-w-0">

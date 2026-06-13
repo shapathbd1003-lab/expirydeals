@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
@@ -141,7 +140,8 @@ export default function ListingDetailPage() {
             <div className="bg-white rounded shadow-sm border border-gray-200 overflow-hidden">
               <div className="relative aspect-[4/3] bg-gray-100">
                 {listing.photos?.length > 0 ? (
-                  <Image src={listing.photos[activePhoto]?.urlMedium} alt={listing.title} fill className="object-cover" />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={listing.photos[activePhoto]?.urlMedium} alt={listing.title} className="object-cover w-full h-full" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-7xl text-gray-200">📦</div>
                 )}
@@ -157,7 +157,8 @@ export default function ListingDetailPage() {
                   {listing.photos.map((p: any, i: number) => (
                     <button key={p.id} onClick={() => setActivePhoto(i)}
                       className={`flex-shrink-0 w-16 h-16 rounded overflow-hidden border-2 transition ${i === activePhoto ? 'border-green-500' : 'border-gray-200'}`}>
-                      <Image src={p.urlThumb} alt="" width={64} height={64} className="object-cover w-full h-full" />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={p.urlThumb} alt="" className="object-cover w-full h-full" />
                     </button>
                   ))}
                 </div>

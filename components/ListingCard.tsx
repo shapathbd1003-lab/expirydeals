@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import Image from 'next/image'
 
 interface Listing {
   id: string
@@ -34,12 +33,11 @@ export function ListingCard({ listing }: { listing: Listing }) {
       {/* Image */}
       <div className="relative w-full aspect-[4/3] bg-gray-100 overflow-hidden rounded-t">
         {listing.primary_photo ? (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={listing.primary_photo.urlThumb}
             alt={listing.title}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-5xl text-gray-200">📦</div>
