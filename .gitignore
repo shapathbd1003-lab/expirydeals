@@ -45,3 +45,6 @@ firebase-debug.*.log
 next-env.d.ts
 
 /app/generated/prisma
+
+# Local Netlify folder
+.netlify
