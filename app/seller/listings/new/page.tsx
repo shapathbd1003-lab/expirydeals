@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import Link from 'next/link'
+import { LocationPicker } from '@/components/LocationPicker'
 
 export default function NewListingPage() {
   const { user, token, loading: authLoading } = useAuth()
@@ -13,6 +14,7 @@ export default function NewListingPage() {
     original_price: '', discounted_price: '',
     quantity: '', expiry_date: '', city: '', region: '', address: '',
   })
+  const [location, setLocation] = useState({ division: '', district: '', upazila: '', address: '' })
   const [photos, setPhotos] = useState<File[]>([])
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([])
   const [imageUrls, setImageUrls] = useState<string[]>([''])
@@ -53,7 +55,13 @@ export default function NewListingPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       credentials: 'include',
-      body: JSON.stringify({ ...form, status: publish ? 'active' : 'draft' }),
+      body: JSON.stringify({
+        ...form,
+        city: location.district,
+        region: location.division,
+        address: [location.upazila, location.address].filter(Boolean).join(', '),
+        status: publish ? 'active' : 'draft',
+      }),
     })
     const data = await res.json()
     if (!res.ok) { setError(data.error?.message || 'Failed'); setLoading(false); return }
@@ -97,7 +105,7 @@ export default function NewListingPage() {
     : 0
 
   const totalImages = photoTab === 'upload' ? photos.length : validImageUrls.length
-  const canPublish = !loading && !!form.city
+  const canPublish = !loading && !!location.district
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
@@ -211,30 +219,7 @@ export default function NewListingPage() {
         {step === 3 && (
           <div className="space-y-4">
             <h2 className="font-semibold text-gray-900">Location & Photos</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <label className="label">City <span className="text-red-500">*</span></label>
-                <select className="input" required value={form.city} onChange={e => setForm({...form, city: e.target.value})}>
-                  <option value="">Select city...</option>
-                  <optgroup label="── Dhaka Division ──"><option>Dhaka</option><option>Gazipur</option><option>Narayanganj</option><option>Manikganj</option><option>Munshiganj</option><option>Narsingdi</option></optgroup>
-                  <optgroup label="── Chittagong Division ──"><option>Chittagong</option><option>Cox's Bazar</option><option>Comilla</option><option>Feni</option><option>Noakhali</option></optgroup>
-                  <optgroup label="── Sylhet Division ──"><option>Sylhet</option><option>Moulvibazar</option><option>Habiganj</option><option>Sunamganj</option></optgroup>
-                  <optgroup label="── Rajshahi Division ──"><option>Rajshahi</option><option>Bogura</option><option>Pabna</option><option>Natore</option></optgroup>
-                  <optgroup label="── Khulna Division ──"><option>Khulna</option><option>Jessore</option><option>Satkhira</option></optgroup>
-                  <optgroup label="── Mymensingh Division ──"><option>Mymensingh</option><option>Jamalpur</option><option>Netrokona</option></optgroup>
-                  <optgroup label="── Rangpur Division ──"><option>Rangpur</option><option>Dinajpur</option><option>Kurigram</option></optgroup>
-                  <optgroup label="── Barishal Division ──"><option>Barishal</option><option>Patuakhali</option><option>Bhola</option></optgroup>
-                </select>
-              </div>
-              <div>
-                <label className="label">Region / Area</label>
-                <input className="input" placeholder="e.g. Mirpur-10" value={form.region} onChange={e => setForm({...form, region: e.target.value})} />
-              </div>
-              <div>
-                <label className="label">Full Address (optional)</label>
-                <input className="input" placeholder="e.g. Shop 5, Mirpur Bazar" value={form.address} onChange={e => setForm({...form, address: e.target.value})} />
-              </div>
-            </div>
+            <LocationPicker value={location} onChange={setLocation} />
 
             {/* Photos */}
             <div>

@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
+import { LocationPicker } from '@/components/LocationPicker'
+import { getUpazilas } from '@/lib/bd-locations'
 
 export default function EditListingPage() {
   const { user, token, loading: authLoading } = useAuth()
@@ -11,6 +13,7 @@ export default function EditListingPage() {
   const [form, setForm] = useState<any>(null)
   const [categories, setCategories] = useState<any[]>([])
   const [existingPhotos, setExistingPhotos] = useState<any[]>([])
+  const [location, setLocation] = useState({ division: '', district: '', upazila: '', address: '' })
   const [imageUrls, setImageUrls] = useState<string[]>([''])
   const [newFiles, setNewFiles] = useState<File[]>([])
   const [newPreviews, setNewPreviews] = useState<string[]>([])
@@ -34,6 +37,20 @@ export default function EditListingPage() {
       if (listing.error) { router.push('/my/listings'); return }
       const d = listing.data
       setExistingPhotos(d.photos || [])
+      // Try to split stored address back into upazila + free-text address
+      const division = d.region || ''
+      const district = d.city || ''
+      let upazila = ''
+      let freeAddress = d.address || ''
+      if (division && district && d.address) {
+        const knownUpazilas = getUpazilas(division, district)
+        const firstPart = d.address.split(', ')[0]
+        if (knownUpazilas.includes(firstPart)) {
+          upazila = firstPart
+          freeAddress = d.address.slice(firstPart.length).replace(/^,\s*/, '')
+        }
+      }
+      setLocation({ division, district, upazila, address: freeAddress })
       setForm({
         title: d.title,
         description: d.description || '',
@@ -42,9 +59,6 @@ export default function EditListingPage() {
         discountedPrice: d.discountedPrice,
         quantity: d.quantity,
         expiryDate: d.expiryDate ? d.expiryDate.split('T')[0] : '',
-        city: d.city || '',
-        region: d.region || '',
-        address: d.address || '',
         status: d.status,
       })
       setCategories(cats.data || [])
@@ -72,9 +86,9 @@ export default function EditListingPage() {
           discounted_price: parseFloat(form.discountedPrice),
           quantity: parseInt(form.quantity),
           expiry_date: form.expiryDate,
-          city: form.city,
-          region: form.region,
-          address: form.address,
+          city: location.district,
+          region: location.division,
+          address: [location.upazila, location.address].filter(Boolean).join(', '),
           status: form.status,
         }),
       })
@@ -165,21 +179,7 @@ export default function EditListingPage() {
           <input className="input" type="date" value={form.expiryDate} onChange={e => set('expiryDate', e.target.value)} required />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="label">City</label>
-            <input className="input" value={form.city} onChange={e => set('city', e.target.value)} />
-          </div>
-          <div>
-            <label className="label">Region</label>
-            <input className="input" value={form.region} onChange={e => set('region', e.target.value)} />
-          </div>
-        </div>
-
-        <div>
-          <label className="label">Full Address</label>
-          <input className="input" value={form.address} onChange={e => set('address', e.target.value)} />
-        </div>
+        <LocationPicker value={location} onChange={setLocation} />
 
         <div>
           <label className="label">Status</label>
