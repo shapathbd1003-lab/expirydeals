@@ -16,17 +16,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           <Navbar />
           <main className="flex-1">{children}</main>
-          <footer className="bg-gray-800 text-gray-400 text-sm py-8 mt-16">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-2">
-              <p className="text-white font-semibold text-base">🥦 ExpiryDeals</p>
-              <p>Connecting buyers and sellers of near-expiry products — saving money, reducing waste.</p>
-              <p className="text-xs mt-4 text-gray-500">
-                Sellers are solely responsible for the legality of their listings.
-                ExpiryDeals does not handle payments or delivery.
-              </p>
-              <p className="text-xs">© {new Date().getFullYear()} ExpiryDeals. All rights reserved.</p>
-            </div>
-          </footer>
         </AuthProvider>
       </body>
     </html>
