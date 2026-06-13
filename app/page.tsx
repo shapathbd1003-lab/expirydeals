@@ -1,73 +1,7 @@
-export const dynamic = 'force-dynamic'
-
+'use client'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ListingCard } from '@/components/ListingCard'
-import { prisma } from '@/lib/prisma'
-import { daysRemaining } from '@/lib/slugify'
-
-const LISTING_CARD = {
-  id: true, slug: true, title: true,
-  originalPrice: true, discountedPrice: true, discountPct: true,
-  quantity: true, expiryDate: true, city: true,
-  category: { select: { id: true, name: true, slug: true } },
-  photos: {
-    select: { urlThumb: true, urlMedium: true, isPrimary: true },
-    orderBy: [{ isPrimary: 'desc' as const }, { sortOrder: 'asc' as const }] as any[],
-    take: 1,
-  },
-}
-
-function mapListing(l: any) {
-  return {
-    ...l,
-    originalPrice: l.originalPrice.toString(),
-    discountedPrice: l.discountedPrice.toString(),
-    discountPct: l.discountPct.toString(),
-    days_remaining: daysRemaining(l.expiryDate),
-    primary_photo: l.photos[0] || null,
-    photos: undefined,
-  }
-}
-
-async function getFeatured() {
-  try {
-    const now = new Date()
-    const threeDays = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000)
-    const [justAdded, expiringSoon] = await Promise.all([
-      prisma.listing.findMany({
-        where: { status: 'active', expiryDate: { gte: now } },
-        orderBy: { createdAt: 'desc' },
-        take: 12,
-        select: LISTING_CARD,
-      }),
-      prisma.listing.findMany({
-        where: { status: 'active', expiryDate: { gte: now, lte: threeDays } },
-        orderBy: { expiryDate: 'asc' },
-        take: 12,
-        select: LISTING_CARD,
-      }),
-    ])
-    return { just_added: justAdded.map(mapListing), expiring_soon: expiringSoon.map(mapListing) }
-  } catch {
-    return { just_added: [], expiring_soon: [] }
-  }
-}
-
-async function getCategories() {
-  try {
-    const cats = await prisma.category.findMany({
-      where: { isActive: true },
-      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
-      select: {
-        id: true, name: true, slug: true,
-        _count: { select: { listings: { where: { status: 'active' } } } },
-      },
-    })
-    return cats
-  } catch {
-    return []
-  }
-}
 
 const CATEGORY_ICONS: Record<string, string> = {
   'food-groceries': '🥫',
@@ -84,13 +18,26 @@ const CATEGORY_ICONS: Record<string, string> = {
   'other': '📦',
 }
 
-export default async function HomePage() {
-  const [featured, categories] = await Promise.all([getFeatured(), getCategories()])
+export default function HomePage() {
+  const [featured, setFeatured] = useState<any>({ just_added: [], expiring_soon: [] })
+  const [categories, setCategories] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/listings/featured').then(r => r.json()),
+      fetch('/api/categories').then(r => r.json()),
+    ]).then(([feat, cats]) => {
+      setFeatured(feat.data || { just_added: [], expiring_soon: [] })
+      setCategories(cats.data || [])
+      setLoading(false)
+    })
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-100">
 
-      {/* Hero search — Bikroy style green banner */}
+      {/* Hero search */}
       <section className="bg-green-500 py-8 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">
@@ -121,7 +68,7 @@ export default async function HomePage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
 
-        {/* Categories grid — Bikroy style */}
+        {/* Categories grid */}
         {categories.length > 0 && (
           <section className="bg-white rounded shadow-sm border border-gray-200 p-4">
             <div className="flex items-center justify-between mb-4">
@@ -148,46 +95,56 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* Expiring Soon */}
-        {featured.expiring_soon?.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-bold text-gray-800 text-base flex items-center gap-2">
-                <span className="w-1 h-5 bg-red-500 rounded inline-block"></span>
-                Expiring Soon
-              </h2>
-              <Link href="/listings?sort=expiry_asc" className="text-xs text-green-600 hover:underline">See all →</Link>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-              {featured.expiring_soon.map((l: any) => <ListingCard key={l.id} listing={l} />)}
-            </div>
-          </section>
-        )}
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="bg-white rounded border border-gray-200 aspect-[3/4] animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <>
+            {/* Expiring Soon */}
+            {featured.expiring_soon?.length > 0 && (
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="font-bold text-gray-800 text-base flex items-center gap-2">
+                    <span className="w-1 h-5 bg-red-500 rounded inline-block"></span>
+                    Expiring Soon
+                  </h2>
+                  <Link href="/listings?sort=expiry_asc" className="text-xs text-green-600 hover:underline">See all →</Link>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                  {featured.expiring_soon.map((l: any) => <ListingCard key={l.id} listing={l} />)}
+                </div>
+              </section>
+            )}
 
-        {/* Just Added */}
-        {featured.just_added?.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-bold text-gray-800 text-base flex items-center gap-2">
-                <span className="w-1 h-5 bg-green-500 rounded inline-block"></span>
-                Just Added
-              </h2>
-              <Link href="/listings?sort=newest" className="text-xs text-green-600 hover:underline">See all →</Link>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-              {featured.just_added.map((l: any) => <ListingCard key={l.id} listing={l} />)}
-            </div>
-          </section>
-        )}
+            {/* Just Added */}
+            {featured.just_added?.length > 0 && (
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="font-bold text-gray-800 text-base flex items-center gap-2">
+                    <span className="w-1 h-5 bg-green-500 rounded inline-block"></span>
+                    Just Added
+                  </h2>
+                  <Link href="/listings?sort=newest" className="text-xs text-green-600 hover:underline">See all →</Link>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                  {featured.just_added.map((l: any) => <ListingCard key={l.id} listing={l} />)}
+                </div>
+              </section>
+            )}
 
-        {/* Empty state */}
-        {featured.expiring_soon?.length === 0 && featured.just_added?.length === 0 && (
-          <section className="bg-white rounded shadow-sm border border-gray-200 py-16 text-center">
-            <p className="text-5xl mb-4">🛒</p>
-            <h2 className="text-xl font-bold text-gray-800 mb-2">No listings yet</h2>
-            <p className="text-gray-500 text-sm mb-6">Be the first to post a deal!</p>
-            <Link href="/register" className="btn-primary">Post an Ad</Link>
-          </section>
+            {/* Empty state */}
+            {featured.expiring_soon?.length === 0 && featured.just_added?.length === 0 && (
+              <section className="bg-white rounded shadow-sm border border-gray-200 py-16 text-center">
+                <p className="text-5xl mb-4">🛒</p>
+                <h2 className="text-xl font-bold text-gray-800 mb-2">No listings yet</h2>
+                <p className="text-gray-500 text-sm mb-6">Be the first to post a deal!</p>
+                <Link href="/register" className="btn-primary">Post an Ad</Link>
+              </section>
+            )}
+          </>
         )}
 
         {/* How it works */}
