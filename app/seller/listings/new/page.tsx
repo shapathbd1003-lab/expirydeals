@@ -135,12 +135,12 @@ export default function NewListingPage() {
             <h2 className="font-semibold text-gray-900">Pricing & Stock</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="label">Original Price ($) <span className="text-red-500">*</span></label>
+                <label className="label">Original Price (৳) <span className="text-red-500">*</span></label>
                 <input type="number" min="0.01" step="0.01" className="input" required
                   value={form.original_price} onChange={e => setForm({...form, original_price: e.target.value})} />
               </div>
               <div>
-                <label className="label">Discounted Price ($) <span className="text-red-500">*</span></label>
+                <label className="label">Discounted Price (৳) <span className="text-red-500">*</span></label>
                 <input type="number" min="0.01" step="0.01" className="input" required
                   value={form.discounted_price} onChange={e => setForm({...form, discounted_price: e.target.value})} />
               </div>

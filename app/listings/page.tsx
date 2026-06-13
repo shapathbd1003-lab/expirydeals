@@ -72,7 +72,7 @@ function ListingsContent() {
               value={filters.city} onChange={(e) => applyFilters({ city: e.target.value })} />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900 mb-2 text-sm">Price Range ($)</h3>
+            <h3 className="font-semibold text-gray-900 mb-2 text-sm">Price Range (৳)</h3>
             <div className="flex gap-2">
               <input type="number" min="0" className="input" placeholder="Min"
                 value={filters.min_price} onChange={(e) => applyFilters({ min_price: e.target.value })} />

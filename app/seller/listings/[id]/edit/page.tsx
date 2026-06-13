@@ -35,13 +35,10 @@ export default function EditListingPage() {
         originalPrice: d.originalPrice,
         discountedPrice: d.discountedPrice,
         quantity: d.quantity,
-        unit: d.unit || '',
         expiryDate: d.expiryDate ? d.expiryDate.split('T')[0] : '',
         city: d.city || '',
         region: d.region || '',
         address: d.address || '',
-        phone: d.phone || '',
-        whatsapp: d.whatsapp || '',
         status: d.status,
       })
       setCategories(cats.data || [])
@@ -68,13 +65,10 @@ export default function EditListingPage() {
           original_price: parseFloat(form.originalPrice),
           discounted_price: parseFloat(form.discountedPrice),
           quantity: parseInt(form.quantity),
-          unit: form.unit,
           expiry_date: form.expiryDate,
           city: form.city,
           region: form.region,
           address: form.address,
-          phone: form.phone,
-          whatsapp: form.whatsapp,
           status: form.status,
         }),
       })
@@ -127,15 +121,9 @@ export default function EditListingPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="label">Quantity *</label>
-            <input className="input" type="number" min="1" value={form.quantity} onChange={e => set('quantity', e.target.value)} required />
-          </div>
-          <div>
-            <label className="label">Unit</label>
-            <input className="input" placeholder="kg, pcs, boxes..." value={form.unit} onChange={e => set('unit', e.target.value)} />
-          </div>
+        <div>
+          <label className="label">Quantity *</label>
+          <input className="input" type="number" min="1" value={form.quantity} onChange={e => set('quantity', e.target.value)} required />
         </div>
 
         <div>
@@ -157,17 +145,6 @@ export default function EditListingPage() {
         <div>
           <label className="label">Full Address</label>
           <input className="input" value={form.address} onChange={e => set('address', e.target.value)} />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="label">Phone *</label>
-            <input className="input" value={form.phone} onChange={e => set('phone', e.target.value)} required />
-          </div>
-          <div>
-            <label className="label">WhatsApp</label>
-            <input className="input" value={form.whatsapp} onChange={e => set('whatsapp', e.target.value)} />
-          </div>
         </div>
 
         <div>

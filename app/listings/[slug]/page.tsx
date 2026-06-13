@@ -134,10 +134,10 @@ export default function ListingDetailPage() {
 
           <div className="flex items-center gap-3">
             <span className="text-3xl font-bold text-gray-900">
-              ${parseFloat(listing.discountedPrice).toFixed(2)}
+              ৳ {parseFloat(listing.discountedPrice).toLocaleString('en-BD')}
             </span>
             <span className="text-lg text-gray-400 line-through">
-              ${parseFloat(listing.originalPrice).toFixed(2)}
+              ৳ {parseFloat(listing.originalPrice).toLocaleString('en-BD')}
             </span>
             <span className="bg-red-100 text-red-700 font-bold text-sm px-2 py-0.5 rounded">
               -{Math.round(parseFloat(listing.discountPct))}% OFF

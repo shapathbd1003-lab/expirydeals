@@ -112,7 +112,7 @@ export default function SellerDashboard() {
                       {l.title}
                     </Link>
                     <p className="text-sm text-gray-500">
-                      ${parseFloat(l.discountedPrice).toFixed(2)} · {l.category?.name} · {l.city}
+                      ৳ {parseFloat(l.discountedPrice).toLocaleString('en-BD')} · {l.category?.name} · {l.city}
                     </p>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-gray-500 flex-shrink-0">
