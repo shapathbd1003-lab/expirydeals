@@ -10,37 +10,39 @@ env:
   - variable: NODE_ENV
     value: production
 
-  # These are referenced from Firebase App Hosting secrets
-  # Set them in the Firebase Console → App Hosting → Secrets
-  - variable: DATABASE_URL
-    secret: DATABASE_URL
-
-  - variable: JWT_SECRET
-    secret: JWT_SECRET
-
-  - variable: JWT_REFRESH_SECRET
-    secret: JWT_REFRESH_SECRET
-
-  - variable: RESEND_API_KEY
-    secret: RESEND_API_KEY
-
-  - variable: CRON_SECRET
-    secret: CRON_SECRET
-
-  - variable: R2_ACCOUNT_ID
-    secret: R2_ACCOUNT_ID
-
-  - variable: R2_ACCESS_KEY_ID
-    secret: R2_ACCESS_KEY_ID
-
-  - variable: R2_SECRET_ACCESS_KEY
-    secret: R2_SECRET_ACCESS_KEY
-
-  - variable: R2_BUCKET_NAME
-    value: expirydeals
-
   - variable: NEXT_PUBLIC_APP_URL
     value: https://expirydeals-app.web.app
 
   - variable: APP_URL
     value: https://expirydeals-app.web.app
+
+  - variable: R2_BUCKET_NAME
+    value: expirydeals
+
+  # --- Secrets (requires Blaze plan + Secret Manager) ---
+  # Uncomment these after upgrading to Blaze at:
+  # https://console.firebase.google.com/project/expirydeals-app/usage/details
+  #
+  # - variable: DATABASE_URL
+  #   secret: DATABASE_URL
+  #
+  # - variable: JWT_SECRET
+  #   secret: JWT_SECRET
+  #
+  # - variable: JWT_REFRESH_SECRET
+  #   secret: JWT_REFRESH_SECRET
+  #
+  # - variable: RESEND_API_KEY
+  #   secret: RESEND_API_KEY
+  #
+  # - variable: CRON_SECRET
+  #   secret: CRON_SECRET
+  #
+  # - variable: R2_ACCOUNT_ID
+  #   secret: R2_ACCOUNT_ID
+  #
+  # - variable: R2_ACCESS_KEY_ID
+  #   secret: R2_ACCESS_KEY_ID
+  #
+  # - variable: R2_SECRET_ACCESS_KEY
+  #   secret: R2_SECRET_ACCESS_KEY
