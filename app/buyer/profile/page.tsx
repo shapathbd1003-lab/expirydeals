@@ -7,14 +7,14 @@ import Link from 'next/link'
 export default function BuyerProfilePage() {
   const { user, token, loading: authLoading, refreshUser } = useAuth()
   const router = useRouter()
-  const [form, setForm] = useState({ fullName: '', phone: '', city: '', currentPassword: '', newPassword: '', confirmPassword: '' })
+  const [form, setForm] = useState({ fullName: '', phone: '', currentPassword: '', newPassword: '', confirmPassword: '' })
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState('')
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/login')
-    if (user) setForm(f => ({ ...f, fullName: user.fullName || '', phone: user.phone || '', city: user.city || '' }))
+    if (user) setForm(f => ({ ...f, fullName: user.full_name || '', phone: user.phone || '' }))
   }, [user, authLoading, router])
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
@@ -27,18 +27,24 @@ export default function BuyerProfilePage() {
       setError('New passwords do not match')
       return
     }
+    if (form.newPassword && form.newPassword.length < 8) {
+      setError('New password must be at least 8 characters')
+      return
+    }
     setSaving(true)
     try {
-      const body: any = { fullName: form.fullName, phone: form.phone, city: form.city }
-      if (form.newPassword) { body.current_password = form.currentPassword; body.new_password = form.newPassword }
-
+      const body: any = { fullName: form.fullName, phone: form.phone }
+      if (form.newPassword) {
+        body.current_password = form.currentPassword
+        body.new_password = form.newPassword
+      }
       const headers: any = { 'Content-Type': 'application/json' }
       if (token) headers.Authorization = `Bearer ${token}`
       const res = await fetch('/api/users/me', {
         method: 'PATCH', headers, credentials: 'include', body: JSON.stringify(body),
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.message || 'Failed to update'); return }
+      if (!res.ok) { setError(data.error?.message || data.message || 'Failed to update'); return }
       setSuccess('Profile updated!')
       setForm(f => ({ ...f, currentPassword: '', newPassword: '', confirmPassword: '' }))
       if (refreshUser) refreshUser()
@@ -52,7 +58,7 @@ export default function BuyerProfilePage() {
   return (
     <div className="max-w-lg mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/buyer/dashboard" className="text-gray-400 hover:text-gray-600">← Dashboard</Link>
+        <Link href="/my/listings" className="text-gray-400 hover:text-gray-600">← My Ads</Link>
         <h1 className="text-xl font-bold text-gray-900">My Profile</h1>
       </div>
 
@@ -61,20 +67,20 @@ export default function BuyerProfilePage() {
 
       <form onSubmit={handleSubmit} className="space-y-5 bg-white rounded-2xl border border-gray-100 p-6">
         <div>
+          <label className="label">Email</label>
+          <input className="input bg-gray-50 text-gray-500" value={user?.email || ''} disabled />
+        </div>
+        <div>
           <label className="label">Full Name *</label>
           <input className="input" value={form.fullName} onChange={e => set('fullName', e.target.value)} required />
         </div>
         <div>
           <label className="label">Phone</label>
-          <input className="input" value={form.phone} onChange={e => set('phone', e.target.value)} />
-        </div>
-        <div>
-          <label className="label">City</label>
-          <input className="input" value={form.city} onChange={e => set('city', e.target.value)} />
+          <input className="input" placeholder="01XXXXXXXXX" value={form.phone} onChange={e => set('phone', e.target.value)} />
         </div>
 
         <hr className="border-gray-100" />
-        <p className="text-sm font-medium text-gray-700">Change Password (optional)</p>
+        <p className="text-sm font-medium text-gray-700">Change Password <span className="text-gray-400 font-normal">(optional)</span></p>
 
         <div>
           <label className="label">Current Password</label>
@@ -82,7 +88,7 @@ export default function BuyerProfilePage() {
         </div>
         <div>
           <label className="label">New Password</label>
-          <input className="input" type="password" value={form.newPassword} onChange={e => set('newPassword', e.target.value)} />
+          <input className="input" type="password" placeholder="Min 8 characters" value={form.newPassword} onChange={e => set('newPassword', e.target.value)} />
         </div>
         <div>
           <label className="label">Confirm New Password</label>

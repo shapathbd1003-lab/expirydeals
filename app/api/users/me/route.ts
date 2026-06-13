@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requireAuth } from '@/lib/auth'
-import { ok, unauthorized, serverError } from '@/lib/response'
+import { requireAuth, verifyPassword, hashPassword } from '@/lib/auth'
+import { ok, unauthorized, serverError, err } from '@/lib/response'
 
 export async function GET(req: NextRequest) {
   try {
@@ -48,11 +48,23 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json()
     const data: Record<string, unknown> = {}
     if (body.full_name !== undefined) data.fullName = body.full_name.trim()
+    if (body.fullName !== undefined) data.fullName = body.fullName.trim()
     if (body.phone !== undefined) data.phone = body.phone?.trim() || null
     if (body.business_name !== undefined) data.businessName = body.business_name?.trim() || null
     if (body.business_desc !== undefined) data.businessDesc = body.business_desc?.trim() || null
     if (body.business_city !== undefined) data.businessCity = body.business_city?.trim() || null
     if (body.business_region !== undefined) data.businessRegion = body.business_region?.trim() || null
+
+    // Password change
+    if (body.new_password) {
+      if (!body.current_password) return err('VALIDATION_ERROR', 'Current password is required', 400)
+      if (body.new_password.length < 8) return err('VALIDATION_ERROR', 'New password must be at least 8 characters', 400)
+      const dbUser = await prisma.user.findUnique({ where: { id: auth.user.userId } })
+      if (!dbUser || !(await verifyPassword(body.current_password, dbUser.passwordHash))) {
+        return err('UNAUTHORIZED', 'Current password is incorrect', 401)
+      }
+      data.passwordHash = await hashPassword(body.new_password)
+    }
 
     const user = await prisma.user.update({ where: { id: auth.user.userId }, data })
     return ok({ id: user.id, full_name: user.fullName, email: user.email, role: user.role })

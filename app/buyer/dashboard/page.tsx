@@ -22,9 +22,9 @@ export default function BuyerDashboard() {
       <div className="grid sm:grid-cols-2 gap-4">
         {[
           { href: '/listings', icon: '🔍', title: 'Browse Listings', desc: 'Find the best near-expiry deals' },
-          { href: '/buyer/favorites', icon: '❤️', title: 'My Favorites', desc: 'Listings you saved' },
+          { href: '/my/favorites', icon: '❤️', title: 'Saved Ads', desc: 'Listings you saved' },
           { href: '/buyer/recently-viewed', icon: '🕐', title: 'Recently Viewed', desc: 'Products you browsed lately' },
-          { href: '/buyer/profile', icon: '👤', title: 'My Profile', desc: 'Update your info and phone' },
+          { href: '/buyer/profile', icon: '👤', title: 'My Profile', desc: 'Update your name, phone and password' },
         ].map((item) => (
           <Link key={item.href} href={item.href}
             className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition flex items-start gap-4">
