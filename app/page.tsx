@@ -1,14 +1,51 @@
 import Link from 'next/link'
 import { ListingCard } from '@/components/ListingCard'
+import { prisma } from '@/lib/prisma'
+import { daysRemaining } from '@/lib/slugify'
+
+const LISTING_CARD = {
+  id: true, slug: true, title: true,
+  originalPrice: true, discountedPrice: true, discountPct: true,
+  quantity: true, expiryDate: true, city: true,
+  category: { select: { id: true, name: true, slug: true } },
+  photos: {
+    select: { urlThumb: true, urlMedium: true, isPrimary: true },
+    orderBy: [{ isPrimary: 'desc' as const }, { sortOrder: 'asc' as const }] as any[],
+    take: 1,
+  },
+}
+
+function mapListing(l: any) {
+  return {
+    ...l,
+    originalPrice: l.originalPrice.toString(),
+    discountedPrice: l.discountedPrice.toString(),
+    discountPct: l.discountPct.toString(),
+    days_remaining: daysRemaining(l.expiryDate),
+    primary_photo: l.photos[0] || null,
+    photos: undefined,
+  }
+}
 
 async function getFeatured() {
   try {
-    const res = await fetch(`${process.env.APP_URL || 'http://localhost:3000'}/api/listings/featured`, {
-      next: { revalidate: 60 },
-    })
-    if (!res.ok) return { just_added: [], expiring_soon: [] }
-    const data = await res.json()
-    return data.data
+    const now = new Date()
+    const threeDays = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000)
+    const [justAdded, expiringSoon] = await Promise.all([
+      prisma.listing.findMany({
+        where: { status: 'active', expiryDate: { gte: now } },
+        orderBy: { createdAt: 'desc' },
+        take: 12,
+        select: LISTING_CARD,
+      }),
+      prisma.listing.findMany({
+        where: { status: 'active', expiryDate: { gte: now, lte: threeDays } },
+        orderBy: { expiryDate: 'asc' },
+        take: 12,
+        select: LISTING_CARD,
+      }),
+    ])
+    return { just_added: justAdded.map(mapListing), expiring_soon: expiringSoon.map(mapListing) }
   } catch {
     return { just_added: [], expiring_soon: [] }
   }
@@ -16,12 +53,15 @@ async function getFeatured() {
 
 async function getCategories() {
   try {
-    const res = await fetch(`${process.env.APP_URL || 'http://localhost:3000'}/api/categories`, {
-      next: { revalidate: 3600 },
+    const cats = await prisma.category.findMany({
+      where: { isActive: true },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+      select: {
+        id: true, name: true, slug: true,
+        _count: { select: { listings: { where: { status: 'active' } } } },
+      },
     })
-    if (!res.ok) return []
-    const data = await res.json()
-    return data.data
+    return cats
   } catch {
     return []
   }
@@ -148,7 +188,7 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* How it works — compact Bikroy footer-style banner */}
+        {/* How it works */}
         <section className="bg-white rounded shadow-sm border border-gray-200 p-6">
           <h2 className="font-bold text-gray-800 text-base mb-5 text-center">How ExpiryDeals Works</h2>
           <div className="grid sm:grid-cols-3 gap-6 text-center">
