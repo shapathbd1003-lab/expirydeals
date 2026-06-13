@@ -15,6 +15,8 @@ export default function NewListingPage() {
   })
   const [photos, setPhotos] = useState<File[]>([])
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([])
+  const [imageUrls, setImageUrls] = useState<string[]>([''])
+  const [photoTab, setPhotoTab] = useState<'upload' | 'url'>('upload')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
@@ -43,6 +45,8 @@ export default function NewListingPage() {
     setPhotoPreviews(p => p.filter((_, j) => j !== i))
   }
 
+  const validImageUrls = imageUrls.filter(u => u.trim().startsWith('http'))
+
   const handleSubmit = async (publish: boolean) => {
     setError(''); setLoading(true)
     const res = await fetch('/api/seller/listings', {
@@ -54,15 +58,27 @@ export default function NewListingPage() {
     const data = await res.json()
     if (!res.ok) { setError(data.error?.message || 'Failed'); setLoading(false); return }
 
-    // Upload photos
+    const listingId = data.data.id
+
+    // Upload file photos
     if (photos.length > 0) {
       const fd = new FormData()
       photos.forEach(p => fd.append('photos', p))
-      await fetch(`/api/seller/listings/${data.data.id}/photos`, {
+      await fetch(`/api/seller/listings/${listingId}/photos`, {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         credentials: 'include',
         body: fd,
+      })
+    }
+
+    // Save image URLs directly as ListingPhoto records via API
+    if (photoTab === 'url' && validImageUrls.length > 0) {
+      await fetch(`/api/seller/listings/${listingId}/photo-urls`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        credentials: 'include',
+        body: JSON.stringify({ urls: validImageUrls }),
       })
     }
 
@@ -75,6 +91,9 @@ export default function NewListingPage() {
   const discount = form.original_price && form.discounted_price
     ? Math.round((1 - parseFloat(form.discounted_price) / parseFloat(form.original_price)) * 100)
     : 0
+
+  const totalImages = photoTab === 'upload' ? photos.length : validImageUrls.length
+  const canPublish = !loading && !!form.city
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
@@ -115,14 +134,22 @@ export default function NewListingPage() {
             </div>
             <div>
               <label className="label">Description <span className="text-red-500">*</span></label>
-              <textarea className="input resize-none" rows={4} required minLength={30}
-                placeholder="Describe the product, quantity per pack, condition, etc. (min 30 chars)"
+              <textarea className="input resize-none" rows={4} required
+                placeholder="Describe the product: brand, quantity, condition, pickup details, phone number etc."
                 value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
-              <p className="text-xs text-gray-400 mt-1">{form.description.length}/30 minimum</p>
+              <p className={`text-xs mt-1 ${form.description.length < 30 ? 'text-orange-500' : 'text-green-600'}`}>
+                {form.description.length < 30
+                  ? `${form.description.length}/30 — write ${30 - form.description.length} more characters`
+                  : `✓ ${form.description.length} characters`}
+              </p>
             </div>
             <button onClick={() => {
               if (!form.title || !form.category_id || form.description.length < 30) {
-                setError('Please fill all required fields (description min 30 chars)')
+                setError(
+                  !form.title ? 'Please enter a product name.' :
+                  !form.category_id ? 'Please select a category.' :
+                  `Description too short — write ${30 - form.description.length} more characters.`
+                )
                 return
               }
               setError(''); setStep(2)
@@ -196,43 +223,93 @@ export default function NewListingPage() {
                 </select>
               </div>
               <div>
-                <label className="label">Region</label>
-                <input className="input" value={form.region} onChange={e => setForm({...form, region: e.target.value})} />
+                <label className="label">Region / Area</label>
+                <input className="input" placeholder="e.g. Mirpur-10" value={form.region} onChange={e => setForm({...form, region: e.target.value})} />
               </div>
               <div>
-                <label className="label">Address (optional)</label>
-                <input className="input" value={form.address} onChange={e => setForm({...form, address: e.target.value})} />
+                <label className="label">Full Address (optional)</label>
+                <input className="input" placeholder="e.g. Shop 5, Mirpur Bazar" value={form.address} onChange={e => setForm({...form, address: e.target.value})} />
               </div>
             </div>
 
             {/* Photos */}
             <div>
-              <label className="label">Photos (1–8) <span className="text-red-500">*</span></label>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {photoPreviews.map((src, i) => (
-                  <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden">
-                    <img src={src} alt="" className="w-full h-full object-cover" />
-                    <button onClick={() => removePhoto(i)}
-                      className="absolute top-0.5 right-0.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">✕</button>
-                  </div>
-                ))}
-                {photos.length < 8 && (
-                  <label className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-green-500 text-gray-400 text-2xl">
-                    +
-                    <input type="file" accept="image/*" multiple className="hidden" onChange={e => addPhotos(e.target.files)} />
-                  </label>
-                )}
+              <label className="label">Photos <span className="text-gray-400 font-normal">(optional — up to 8)</span></label>
+
+              {/* Tab toggle */}
+              <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit mb-3">
+                <button type="button" onClick={() => setPhotoTab('upload')}
+                  className={`px-3 py-1 rounded text-sm font-medium transition ${photoTab === 'upload' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
+                  📁 Upload from device
+                </button>
+                <button type="button" onClick={() => setPhotoTab('url')}
+                  className={`px-3 py-1 rounded text-sm font-medium transition ${photoTab === 'url' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
+                  🔗 Paste image URL
+                </button>
               </div>
-              <p className="text-xs text-gray-400 mt-1">{photos.length}/8 photos added</p>
+
+              {photoTab === 'upload' && (
+                <div>
+                  <div className="flex flex-wrap gap-2">
+                    {photoPreviews.map((src, i) => (
+                      <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden">
+                        <img src={src} alt="" className="w-full h-full object-cover" />
+                        <button type="button" onClick={() => removePhoto(i)}
+                          className="absolute top-0.5 right-0.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">✕</button>
+                      </div>
+                    ))}
+                    {photos.length < 8 && (
+                      <label className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-green-500 text-gray-400 gap-1">
+                        <span className="text-2xl">+</span>
+                        <span className="text-xs">Add photo</span>
+                        <input type="file" accept="image/*" multiple className="hidden" onChange={e => addPhotos(e.target.files)} />
+                      </label>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-2">{photos.length}/8 photos · JPG, PNG, WebP · max 10 MB each</p>
+                </div>
+              )}
+
+              {photoTab === 'url' && (
+                <div className="space-y-2">
+                  <p className="text-xs text-gray-500">Paste links to images already online (e.g. from Google, Facebook, or any website)</p>
+                  {imageUrls.map((url, i) => (
+                    <div key={i} className="flex gap-2 items-center">
+                      <input
+                        className="input flex-1 text-sm"
+                        placeholder={`Image URL ${i + 1} — paste a link starting with https://`}
+                        value={url}
+                        onChange={e => {
+                          const next = [...imageUrls]
+                          next[i] = e.target.value
+                          setImageUrls(next)
+                        }}
+                      />
+                      {url.trim().startsWith('http') && (
+                        <img src={url} alt="" className="w-10 h-10 rounded object-cover border border-gray-200 flex-shrink-0"
+                          onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                      )}
+                      {imageUrls.length > 1 && (
+                        <button type="button" onClick={() => setImageUrls(u => u.filter((_, j) => j !== i))}
+                          className="text-red-400 hover:text-red-600 flex-shrink-0">✕</button>
+                      )}
+                    </div>
+                  ))}
+                  {imageUrls.length < 8 && (
+                    <button type="button" onClick={() => setImageUrls(u => [...u, ''])}
+                      className="text-sm text-green-600 hover:underline">+ Add another URL</button>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex gap-3">
-              <button onClick={() => setStep(2)} className="btn-secondary flex-1">← Back</button>
-              <button onClick={() => handleSubmit(false)} disabled={loading || !form.city}
+              <button type="button" onClick={() => setStep(2)} className="btn-secondary flex-1">← Back</button>
+              <button type="button" onClick={() => handleSubmit(false)} disabled={!canPublish}
                 className="btn-secondary flex-1">
                 {loading ? '...' : 'Save Draft'}
               </button>
-              <button onClick={() => handleSubmit(true)} disabled={loading || !form.city || photos.length === 0}
+              <button type="button" onClick={() => handleSubmit(true)} disabled={!canPublish}
                 className="btn-primary flex-1">
                 {loading ? 'Publishing...' : '🚀 Publish'}
               </button>
