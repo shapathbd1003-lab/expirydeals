@@ -9,7 +9,7 @@ export default function BuyerDashboard() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== 'buyer')) router.push('/login')
+    if (!loading && !user) router.push('/login')
   }, [user, loading, router])
 
   if (loading) return null

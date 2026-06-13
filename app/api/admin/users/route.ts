@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
         { email: { contains: q, mode: 'insensitive' } },
       ]
     }
-    if (role && ['buyer', 'seller', 'admin'].includes(role)) where.role = role as any
+    if (role && ['user', 'admin'].includes(role)) where.role = role as any
     if (status) where.status = status as any
 
     const [total, users] = await Promise.all([

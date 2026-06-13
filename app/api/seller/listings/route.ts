@@ -1,14 +1,14 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
-import { ok, paginated, validationError, unauthorized, forbidden, serverError } from '@/lib/response'
+import { ok, paginated, validationError, unauthorized, serverError } from '@/lib/response'
 import { generateSlug, discountPct } from '@/lib/slugify'
 import { Prisma } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireAuth(req, 'seller')
-    if ('error' in auth) return auth.status === 403 ? forbidden() : unauthorized()
+    const auth = await requireAuth(req)
+    if ('error' in auth) return unauthorized()
 
     const { searchParams } = req.nextUrl
     const status = searchParams.get('status') || ''
@@ -55,8 +55,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const auth = await requireAuth(req, 'seller')
-    if ('error' in auth) return auth.status === 403 ? forbidden() : unauthorized()
+    const auth = await requireAuth(req)
+    if ('error' in auth) return unauthorized()
 
     const body = await req.json()
     const {

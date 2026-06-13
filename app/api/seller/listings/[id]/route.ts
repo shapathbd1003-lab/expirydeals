@@ -6,8 +6,8 @@ import { discountPct } from '@/lib/slugify'
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const auth = await requireAuth(req, 'seller')
-    if ('error' in auth) return auth.status === 403 ? forbidden() : unauthorized()
+    const auth = await requireAuth(req)
+    if ('error' in auth) return unauthorized()
 
     const listing = await prisma.listing.findUnique({
       where: { id: params.id },
@@ -30,8 +30,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const auth = await requireAuth(req, 'seller')
-    if ('error' in auth) return auth.status === 403 ? forbidden() : unauthorized()
+    const auth = await requireAuth(req)
+    if ('error' in auth) return unauthorized()
 
     const listing = await prisma.listing.findUnique({ where: { id: params.id } })
     if (!listing || listing.status === 'deleted') return notFound('Listing not found')
@@ -87,8 +87,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const auth = await requireAuth(req, 'seller')
-    if ('error' in auth) return auth.status === 403 ? forbidden() : unauthorized()
+    const auth = await requireAuth(req)
+    if ('error' in auth) return unauthorized()
 
     const listing = await prisma.listing.findUnique({ where: { id: params.id } })
     if (!listing || listing.status === 'deleted') return notFound('Listing not found')

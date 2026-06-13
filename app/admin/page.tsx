@@ -34,8 +34,8 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
             { label: 'Total Users', value: stats.total_users, icon: '👥' },
-            { label: 'Sellers', value: stats.total_sellers, icon: '🏪' },
             { label: 'Active Listings', value: stats.total_active_listings, icon: '📦' },
+            { label: 'New This Week', value: stats.listings_created_this_week, icon: '📬' },
             { label: 'Open Reports', value: stats.open_reports, icon: '🚩', warn: stats.open_reports > 0 },
           ].map((s) => (
             <div key={s.label} className={`bg-white rounded-2xl border p-5 ${s.warn ? 'border-red-200 bg-red-50' : 'border-gray-100'}`}>

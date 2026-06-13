@@ -23,7 +23,7 @@ export default function SellerDashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'seller')) router.push('/login')
+    if (!authLoading && !user) router.push('/login')
   }, [user, authLoading, router])
 
   useEffect(() => {

@@ -11,12 +11,11 @@ export async function GET(req: NextRequest) {
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 
     const [
-      totalUsers, totalSellers, totalBuyers, totalActiveListings,
+      totalUsers, totalAdmins, totalActiveListings,
       listingsThisWeek, contactsThisWeek, openReports,
     ] = await Promise.all([
       prisma.user.count({ where: { status: { not: 'deleted' } } }),
-      prisma.user.count({ where: { role: 'seller', status: { not: 'deleted' } } }),
-      prisma.user.count({ where: { role: 'buyer', status: { not: 'deleted' } } }),
+      prisma.user.count({ where: { role: 'admin', status: { not: 'deleted' } } }),
       prisma.listing.count({ where: { status: 'active' } }),
       prisma.listing.count({ where: { createdAt: { gte: weekAgo } } }),
       prisma.listingContact.count({ where: { contactedAt: { gte: weekAgo } } }),
@@ -25,8 +24,7 @@ export async function GET(req: NextRequest) {
 
     return ok({
       total_users: totalUsers,
-      total_sellers: totalSellers,
-      total_buyers: totalBuyers,
+      total_admins: totalAdmins,
       total_active_listings: totalActiveListings,
       listings_created_this_week: listingsThisWeek,
       contact_clicks_this_week: contactsThisWeek,

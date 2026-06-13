@@ -14,7 +14,7 @@ export default function EditListingPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'seller')) router.push('/login')
+    if (!authLoading && !user) router.push('/login')
   }, [user, authLoading, router])
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function EditListingPage() {
       fetch(`/api/seller/listings/${id}`, { headers, credentials: 'include' }).then(r => r.json()),
       fetch('/api/categories').then(r => r.json()),
     ]).then(([listing, cats]) => {
-      if (listing.error) { router.push('/seller/dashboard'); return }
+      if (listing.error) { router.push('/my/listings'); return }
       const d = listing.data
       setForm({
         title: d.title,
@@ -74,7 +74,7 @@ export default function EditListingPage() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.message || 'Failed to save'); return }
-      router.push('/seller/dashboard')
+      router.push('/my/listings')
     } finally {
       setSaving(false)
     }
@@ -85,7 +85,7 @@ export default function EditListingPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/seller/dashboard" className="text-gray-400 hover:text-gray-600">← Dashboard</Link>
+        <Link href="/my/listings" className="text-gray-400 hover:text-gray-600">← My Ads</Link>
         <h1 className="text-xl font-bold text-gray-900">Edit Listing</h1>
       </div>
 
@@ -159,7 +159,7 @@ export default function EditListingPage() {
           <button type="submit" disabled={saving} className="btn-primary disabled:opacity-50">
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
-          <Link href="/seller/dashboard" className="btn-secondary">Cancel</Link>
+          <Link href="/my/listings" className="btn-secondary">Cancel</Link>
         </div>
       </form>
     </div>

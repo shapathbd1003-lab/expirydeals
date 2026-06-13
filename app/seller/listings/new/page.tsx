@@ -20,7 +20,7 @@ export default function NewListingPage() {
   const [step, setStep] = useState(1)
 
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'seller')) router.push('/login')
+    if (!authLoading && !user) router.push('/login')
   }, [user, authLoading, router])
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export default function NewListingPage() {
     }
 
     setLoading(false)
-    router.push('/seller/dashboard')
+    router.push('/my/listings')
   }
 
   if (authLoading) return null
@@ -79,7 +79,7 @@ export default function NewListingPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/seller/dashboard" className="text-gray-400 hover:text-gray-600">← Back</Link>
+        <Link href="/my/listings" className="text-gray-400 hover:text-gray-600">← Back</Link>
         <h1 className="text-xl font-bold text-gray-900">Create New Listing</h1>
       </div>
 

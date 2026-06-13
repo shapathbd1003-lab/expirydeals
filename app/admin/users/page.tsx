@@ -59,8 +59,7 @@ export default function AdminUsersPage() {
           value={q} onChange={e => setQ(e.target.value)} />
         <select className="input w-auto" value={role} onChange={e => setRole(e.target.value)}>
           <option value="">All roles</option>
-          <option value="buyer">Buyer</option>
-          <option value="seller">Seller</option>
+          <option value="user">User</option>
           <option value="admin">Admin</option>
         </select>
       </div>
@@ -86,8 +85,7 @@ export default function AdminUsersPage() {
                 <td className="px-4 py-3 text-gray-600">{u.email}</td>
                 <td className="px-4 py-3">
                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                    u.role === 'admin' ? 'bg-purple-100 text-purple-700' :
-                    u.role === 'seller' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                    u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'
                   }`}>{u.role}</span>
                 </td>
                 <td className="px-4 py-3">
