@@ -10,6 +10,8 @@ export default function EditListingPage() {
   const { id } = useParams<{ id: string }>()
   const [form, setForm] = useState<any>(null)
   const [categories, setCategories] = useState<any[]>([])
+  const [existingPhotos, setExistingPhotos] = useState<any[]>([])
+  const [imageUrls, setImageUrls] = useState<string[]>([''])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -28,6 +30,7 @@ export default function EditListingPage() {
     ]).then(([listing, cats]) => {
       if (listing.error) { router.push('/my/listings'); return }
       const d = listing.data
+      setExistingPhotos(d.photos || [])
       setForm({
         title: d.title,
         description: d.description || '',
@@ -74,6 +77,18 @@ export default function EditListingPage() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.message || 'Failed to save'); return }
+
+      // Save new image URLs if any
+      const validUrls = imageUrls.filter(u => u.trim().startsWith('http'))
+      if (validUrls.length > 0) {
+        await fetch(`/api/seller/listings/${id}/photo-urls`, {
+          method: 'POST',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ urls: validUrls }),
+        })
+      }
+
       router.push('/my/listings')
     } finally {
       setSaving(false)
@@ -153,6 +168,48 @@ export default function EditListingPage() {
             <option value="active">Active</option>
             <option value="paused">Paused</option>
           </select>
+        </div>
+
+        {/* Photos */}
+        <div>
+          <label className="label">Photos</label>
+          {existingPhotos.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {existingPhotos.map((p: any) => (
+                <img key={p.id} src={p.urlThumb} alt="" className="w-16 h-16 rounded object-cover border border-gray-200" />
+              ))}
+              <p className="text-xs text-gray-400 w-full">{existingPhotos.length} existing photo(s)</p>
+            </div>
+          )}
+          <p className="text-xs text-gray-500 mb-2">Add more images by pasting URLs below:</p>
+          <div className="space-y-2">
+            {imageUrls.map((url, i) => (
+              <div key={i} className="flex gap-2 items-center">
+                <input
+                  className="input flex-1 text-sm"
+                  placeholder="Paste image URL starting with https://"
+                  value={url}
+                  onChange={e => {
+                    const next = [...imageUrls]
+                    next[i] = e.target.value
+                    setImageUrls(next)
+                  }}
+                />
+                {url.trim().startsWith('http') && (
+                  <img src={url} alt="" className="w-10 h-10 rounded object-cover border border-gray-200 flex-shrink-0"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                )}
+                {imageUrls.length > 1 && (
+                  <button type="button" onClick={() => setImageUrls(u => u.filter((_, j) => j !== i))}
+                    className="text-red-400 hover:text-red-600 flex-shrink-0">✕</button>
+                )}
+              </div>
+            ))}
+            {imageUrls.length < 8 - existingPhotos.length && (
+              <button type="button" onClick={() => setImageUrls(u => [...u, ''])}
+                className="text-sm text-green-600 hover:underline">+ Add another URL</button>
+            )}
+          </div>
         </div>
 
         <div className="flex gap-3 pt-2">
