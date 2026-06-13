@@ -4,6 +4,20 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  NODE_ENV = "production"
+  DATABASE_URL = "postgresql://neondb_owner:npg_EZiRk9cu2TDO@ep-tiny-recipe-adno0rnc-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+  JWT_SECRET = "expirydeals-jwt-secret-change-in-production-32chars"
+  JWT_REFRESH_SECRET = "expirydeals-refresh-secret-change-in-production-48chars"
+  CRON_SECRET = "expirydeals-cron-secret-2025"
+  EMAIL_FROM = "noreply@expirydeals.com"
+
+[context.production.environment]
+  NODE_ENV = "production"
+  DATABASE_URL = "postgresql://neondb_owner:npg_EZiRk9cu2TDO@ep-tiny-recipe-adno0rnc-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+  JWT_SECRET = "expirydeals-jwt-secret-change-in-production-32chars"
+  JWT_REFRESH_SECRET = "expirydeals-refresh-secret-change-in-production-48chars"
+  CRON_SECRET = "expirydeals-cron-secret-2025"
+  EMAIL_FROM = "noreply@expirydeals.com"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
