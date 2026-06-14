@@ -21,16 +21,14 @@ export default function LoginPage() {
     const result = await login(form.email, form.password)
     setLoading(false)
     if (result.error) {
-      setError(result.error)
-    } else {
-      const res = await fetch('/api/users/me', { credentials: 'include' })
-      const data = await res.json()
-      const user = data?.data
-      if (user && !user.email_verified) {
+      // API now blocks unverified users with a specific message
+      if (result.error.toLowerCase().includes('verify your email')) {
         setUnverified(true)
-        return
+      } else {
+        setError(result.error)
       }
-      if (user?.role === 'admin') router.push('/admin')
+    } else {
+      if (result.role === 'admin') router.push('/admin')
       else router.push('/my/listings')
     }
   }

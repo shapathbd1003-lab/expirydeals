@@ -46,6 +46,9 @@ export async function POST(req: NextRequest) {
     if (user.status === 'deleted') {
       return err('UNAUTHORIZED', 'Account not found', 401)
     }
+    if (!user.emailVerified) {
+      return err('FORBIDDEN', 'Please verify your email address before logging in. Check your inbox for the verification link.', 403)
+    }
 
     const accessToken = generateAccessToken({
       userId: user.id,

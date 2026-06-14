@@ -18,7 +18,7 @@ interface AuthContext {
   user: AuthUser | null
   token: string | null
   loading: boolean
-  login: (email: string, password: string) => Promise<{ error?: string }>
+  login: (email: string, password: string) => Promise<{ error?: string; role?: string }>
   logout: () => void
   setToken: (t: string, user: AuthUser) => void
   refreshUser: () => void
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setTokenState(data.data.access_token)
     setUser(data.data.user)
-    return {}
+    return { role: data.data.user.role as string }
   }
 
   const logout = async () => {
