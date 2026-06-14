@@ -26,6 +26,12 @@ enum ListingStatus {
   deleted
 }
 
+enum SoldVia {
+  expirydeals
+  other_platform
+  other
+}
+
 enum ReportReason {
   spam
   wrong_info
@@ -140,6 +146,8 @@ model Listing {
   region          String?
   address         String?
   status          ListingStatus @default(draft)
+  soldVia         SoldVia?      @map("sold_via")
+  soldNote        String?       @map("sold_note")
   viewCount       Int           @default(0) @map("view_count")
   contactCount    Int           @default(0) @map("contact_count")
   createdAt       DateTime      @default(now()) @map("created_at")

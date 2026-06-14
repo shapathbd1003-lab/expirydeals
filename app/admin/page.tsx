@@ -1,17 +1,11 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 export default function AdminDashboard() {
   const { user, token, loading: authLoading } = useAuth()
-  const router = useRouter()
   const [stats, setStats] = useState<any>(null)
-
-  useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'admin')) router.push('/login')
-  }, [user, authLoading, router])
 
   useEffect(() => {
     if (!user || user.role !== 'admin') return
@@ -27,7 +21,8 @@ export default function AdminDashboard() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Admin Panel</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard</h1>
+      <p className="text-gray-500 text-sm mb-6">Welcome back, {user?.full_name}</p>
 
       {/* Stats */}
       {stats && (

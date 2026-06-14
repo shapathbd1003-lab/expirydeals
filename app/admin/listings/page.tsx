@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 
 const STATUS_COLORS: Record<string, string> = {
   active: 'bg-green-100 text-green-700',
@@ -98,12 +97,13 @@ export default function AdminListingsPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {photo ? (
-                        <Image src={photo.thumbUrl} alt={l.title} width={40} height={40} className="rounded-lg object-cover w-10 h-10" />
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={photo.urlThumb} alt={l.title} className="rounded-lg object-cover w-10 h-10" />
                       ) : (
                         <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-300 text-sm">📦</div>
                       )}
                       <div>
-                        <Link href={`/listings/${l.slug}`} className="font-medium text-gray-900 hover:text-green-600 line-clamp-1">
+                        <Link href={`/listings/${l.slug}`} className="font-medium text-gray-900 hover:text-orange-600 line-clamp-1">
                           {l.title}
                         </Link>
                         <p className="text-xs text-gray-400">{l.category?.name}</p>

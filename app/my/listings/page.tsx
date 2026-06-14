@@ -13,18 +13,90 @@ function daysLeft(expiryDate: string) {
   return `${diff}d`
 }
 
+function SoldModal({ listing, token, onClose, onDone }: {
+  listing: any, token: string | null, onClose: () => void, onDone: () => void
+}) {
+  const [soldVia, setSoldVia] = useState<'expirydeals' | 'other_platform' | 'other'>('expirydeals')
+  const [soldNote, setSoldNote] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const confirm = async () => {
+    setSaving(true)
+    await fetch(`/api/seller/listings/${listing.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      credentials: 'include',
+      body: JSON.stringify({ status: 'deleted', sold_via: soldVia, sold_note: soldNote }),
+    })
+    setSaving(false)
+    onDone()
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-xl">
+        <div>
+          <h3 className="font-bold text-lg text-gray-900">Mark as Sold</h3>
+          <p className="text-sm text-gray-500 mt-0.5 line-clamp-1">{listing.title}</p>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-gray-700">How did you sell it?</p>
+          {[
+            { value: 'expirydeals', icon: '🟠', label: 'Sold via ExpiryDeals', desc: 'Buyer found you through this platform' },
+            { value: 'other_platform', icon: '🔵', label: 'Sold via another platform', desc: 'Facebook, Bikroy, WhatsApp, etc.' },
+            { value: 'other', icon: '⚪', label: 'Other / Not sure', desc: '' },
+          ].map(opt => (
+            <button key={opt.value} type="button"
+              onClick={() => setSoldVia(opt.value as any)}
+              className={`w-full text-left flex items-start gap-3 p-3 rounded-xl border-2 transition ${
+                soldVia === opt.value ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300'
+              }`}>
+              <span className="text-xl mt-0.5">{opt.icon}</span>
+              <div>
+                <p className="text-sm font-semibold text-gray-800">{opt.label}</p>
+                {opt.desc && <p className="text-xs text-gray-500">{opt.desc}</p>}
+              </div>
+              {soldVia === opt.value && <span className="ml-auto text-orange-500 text-lg">✓</span>}
+            </button>
+          ))}
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-gray-700 block mb-1">Note (optional)</label>
+          <input
+            className="input text-sm"
+            placeholder="e.g. sold to a restaurant, 50 units"
+            value={soldNote}
+            onChange={e => setSoldNote(e.target.value)}
+          />
+        </div>
+
+        <div className="flex gap-2 pt-1">
+          <button onClick={confirm} disabled={saving}
+            className="btn-primary flex-1 disabled:opacity-50">
+            {saving ? 'Saving...' : '✅ Confirm Sold'}
+          </button>
+          <button onClick={onClose} className="btn-secondary flex-1">Cancel</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function MyListingsPage() {
   const { user, token, loading: authLoading } = useAuth()
   const router = useRouter()
   const [tab, setTab] = useState<typeof STATUS_TABS[number]>('active')
   const [listings, setListings] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [soldListing, setSoldListing] = useState<any>(null)
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/login')
   }, [user, authLoading, router])
 
-  useEffect(() => {
+  const fetchListings = () => {
     if (!user) return
     setLoading(true)
     fetch(`/api/seller/listings?status=${tab}&per_page=48`, {
@@ -34,7 +106,9 @@ export default function MyListingsPage() {
       .then(r => r.json())
       .then(d => setListings(d.data || []))
       .finally(() => setLoading(false))
-  }, [tab, user, token])
+  }
+
+  useEffect(() => { fetchListings() }, [tab, user, token])
 
   const pauseResume = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'paused' : 'active'
@@ -139,9 +213,14 @@ export default function MyListingsPage() {
                     </button>
                   )}
                   {(tab === 'active' || tab === 'paused') && (
-                    <button onClick={() => pauseResume(l.id, l.status)} className="text-xs btn-secondary py-1 px-2">
-                      {l.status === 'active' ? 'Pause' : 'Resume'}
-                    </button>
+                    <>
+                      <button onClick={() => pauseResume(l.id, l.status)} className="text-xs btn-secondary py-1 px-2">
+                        {l.status === 'active' ? 'Pause' : 'Resume'}
+                      </button>
+                      <button onClick={() => setSoldListing(l)} className="text-xs bg-green-500 hover:bg-green-600 text-white font-semibold py-1 px-3 rounded-lg transition">
+                        ✅ Mark Sold
+                      </button>
+                    </>
                   )}
                   {tab !== 'deleted' && (
                     <button onClick={() => deleteListing(l.id, false)} className="text-xs text-red-500 hover:underline py-1">Delete</button>
@@ -154,6 +233,15 @@ export default function MyListingsPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {soldListing && (
+        <SoldModal
+          listing={soldListing}
+          token={token}
+          onClose={() => setSoldListing(null)}
+          onDone={() => { setSoldListing(null); setListings(ls => ls.filter(l => l.id !== soldListing.id)) }}
+        />
       )}
     </div>
   )
