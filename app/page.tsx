@@ -19,6 +19,21 @@ const CATEGORY_ICONS: Record<string, string> = {
   'other': '📦',
 }
 
+const CATEGORY_NAMES_BN: Record<string, string> = {
+  'food-groceries': 'খাদ্য ও মুদিপণ্য',
+  'beverages': 'পানীয়',
+  'dairy-eggs': 'দুগ্ধ ও ডিম',
+  'meat-seafood': 'মাংস ও সামুদ্রিক খাবার',
+  'bakery-snacks': 'বেকারি ও স্ন্যাকস',
+  'pharmaceuticals': 'ওষুধপত্র',
+  'health-wellness': 'স্বাস্থ্য ও সুস্থতা',
+  'baby-kids': 'শিশু ও বাচ্চা',
+  'cosmetics-beauty': 'প্রসাধনী ও সৌন্দর্য',
+  'cleaning-products': 'পরিষ্কার পণ্য',
+  'pet-supplies': 'পোষা প্রাণীর সামগ্রী',
+  'other': 'অন্যান্য',
+}
+
 const T = {
   en: {
     badge: "Bangladesh's #1 Near-Expiry Marketplace",
@@ -201,7 +216,7 @@ export default function HomePage() {
                 >
                   <span className="text-2xl">{CATEGORY_ICONS[cat.slug] || '📦'}</span>
                   <span className="text-xs text-gray-700 group-hover:text-orange-700 font-medium leading-tight">
-                    {cat.name}
+                    {lang === 'bn' ? (CATEGORY_NAMES_BN[cat.slug] || cat.name) : cat.name}
                   </span>
                   {cat._count?.listings > 0 && (
                     <span className="text-[10px] text-gray-400">{cat._count.listings}</span>
