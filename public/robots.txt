@@ -1,0 +1,19 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /my/
+Disallow: /seller/
+Allow: /
+Allow: /listings/
+Allow: /listings
+Allow: /about
+Allow: /contact
+Allow: /privacy
+Allow: /terms
+
+Sitemap: https://www.expirydeals.com/sitemap.xml

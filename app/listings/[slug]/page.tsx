@@ -303,10 +303,6 @@ export default function ListingDetailPage() {
                   <span>📍</span>
                   <span>{listing.seller?.business_city || listing.city}, Bangladesh</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span>✅</span>
-                  <span className="text-orange-600">Verified Seller</span>
-                </div>
               </div>
             </div>
 

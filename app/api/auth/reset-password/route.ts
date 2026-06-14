@@ -1,10 +1,26 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
-import { ok, validationError, serverError } from '@/lib/response'
+import { ok, validationError, err, serverError } from '@/lib/response'
+
+const resetAttempts = new Map<string, { count: number; resetAt: number }>()
+function checkRate(ip: string): boolean {
+  const now = Date.now()
+  const entry = resetAttempts.get(ip)
+  if (!entry || entry.resetAt < now) {
+    resetAttempts.set(ip, { count: 1, resetAt: now + 60 * 60 * 1000 })
+    return true
+  }
+  if (entry.count >= 10) return false
+  entry.count++
+  return true
+}
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+    if (!checkRate(ip)) return err('RATE_LIMITED', 'Too many attempts. Try again later.', 429)
+
     const { token, password } = await req.json()
     if (!token || !password) return validationError('token and password are required')
     if (password.length < 8) return validationError('password must be at least 8 characters')
