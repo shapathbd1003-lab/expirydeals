@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 
-const STATUS_TABS = ['active', 'paused', 'expired', 'deleted'] as const
+const STATUS_TABS = ['active', 'draft', 'paused', 'expired', 'deleted'] as const
 
 function daysLeft(expiryDate: string) {
   const diff = Math.ceil((new Date(expiryDate).getTime() - Date.now()) / 86400000)
@@ -47,6 +47,17 @@ export default function MyListingsPage() {
     setListings(ls => ls.filter(l => l.id !== id))
   }
 
+  const publishDraft = async (id: string) => {
+    if (!confirm('Publish this listing now? It will go live immediately.')) return
+    await fetch(`/api/seller/listings/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      credentials: 'include',
+      body: JSON.stringify({ status: 'active' }),
+    })
+    setListings(ls => ls.filter(l => l.id !== id))
+  }
+
   const deleteListing = async (id: string, alreadyDeleted: boolean) => {
     const msg = alreadyDeleted
       ? 'Permanently remove this listing from the database? This cannot be undone.'
@@ -72,13 +83,13 @@ export default function MyListingsPage() {
         <Link href="/seller/listings/new" className="btn-primary">+ Post New Ad</Link>
       </div>
 
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6 w-fit">
+      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6 flex-wrap">
         {STATUS_TABS.map((s) => (
           <button key={s} onClick={() => setTab(s)}
             className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition ${
               tab === s ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
             }`}>
-            {s}
+            {s === 'draft' ? 'Drafts' : s.charAt(0).toUpperCase() + s.slice(1)}
           </button>
         ))}
       </div>
@@ -90,8 +101,9 @@ export default function MyListingsPage() {
       ) : listings.length === 0 ? (
         <div className="text-center py-16 text-gray-500">
           <p className="text-4xl mb-3">📦</p>
-          <p className="mb-4">No {tab} ads.</p>
+          <p className="mb-4">No {tab === 'draft' ? 'saved drafts' : tab + ' ads'}.</p>
           {tab === 'active' && <Link href="/seller/listings/new" className="btn-primary">Post your first ad</Link>}
+          {tab === 'draft' && <Link href="/seller/listings/new" className="btn-primary">Create a new listing</Link>}
         </div>
       ) : (
         <div className="space-y-3">
@@ -106,16 +118,26 @@ export default function MyListingsPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <Link href={`/listings/${l.slug}`} className="font-medium text-gray-900 hover:text-green-600 line-clamp-1">{l.title}</Link>
+                    <Link href={`/listings/${l.slug}`} className="font-medium text-gray-900 hover:text-orange-600 line-clamp-1">{l.title}</Link>
                     <p className="text-sm text-gray-500">৳ {parseFloat(l.discountedPrice).toLocaleString('en-BD')} · {l.category?.name} · {l.city}</p>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-gray-500 flex-shrink-0">
                     <span>👁 {l.viewCount}</span>
-                    <span className={l.days_remaining <= 3 ? 'text-red-500 font-medium' : ''}>{daysLeft(l.expiryDate)}</span>
+                    {tab !== 'draft' && (
+                      <span className={l.days_remaining <= 3 ? 'text-red-500 font-medium' : ''}>{daysLeft(l.expiryDate)}</span>
+                    )}
+                    {tab === 'draft' && (
+                      <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs font-medium">Draft</span>
+                    )}
                   </div>
                 </div>
-                <div className="flex gap-2 mt-2">
+                <div className="flex gap-2 mt-2 flex-wrap">
                   <Link href={`/seller/listings/${l.id}/edit`} className="text-xs btn-secondary py-1 px-2">Edit</Link>
+                  {tab === 'draft' && (
+                    <button onClick={() => publishDraft(l.id)} className="text-xs bg-orange-500 hover:bg-orange-600 text-white font-semibold py-1 px-3 rounded-lg transition">
+                      🚀 Publish
+                    </button>
+                  )}
                   {(tab === 'active' || tab === 'paused') && (
                     <button onClick={() => pauseResume(l.id, l.status)} className="text-xs btn-secondary py-1 px-2">
                       {l.status === 'active' ? 'Pause' : 'Resume'}

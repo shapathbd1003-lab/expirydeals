@@ -72,13 +72,14 @@ export default function AdminUsersPage() {
               <th className="text-left px-4 py-3 text-gray-600 font-medium">Email</th>
               <th className="text-left px-4 py-3 text-gray-600 font-medium">Role</th>
               <th className="text-left px-4 py-3 text-gray-600 font-medium">Status</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium">Email</th>
               <th className="text-left px-4 py-3 text-gray-600 font-medium">Listings</th>
               <th className="text-left px-4 py-3 text-gray-600 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {loading ? (
-              <tr><td colSpan={6} className="text-center py-8 text-gray-400">Loading...</td></tr>
+              <tr><td colSpan={7} className="text-center py-8 text-gray-400">Loading...</td></tr>
             ) : users.map((u: any) => (
               <tr key={u.id} className="hover:bg-gray-50">
                 <td className="px-4 py-3 font-medium text-gray-900">{u.fullName}</td>
@@ -93,6 +94,11 @@ export default function AdminUsersPage() {
                     u.status === 'active' ? 'bg-green-100 text-green-700' :
                     u.status === 'suspended' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'
                   }`}>{u.status}</span>
+                </td>
+                <td className="px-4 py-3">
+                  {u.emailVerified
+                    ? <span className="text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded-full">✓ Verified</span>
+                    : <span className="text-xs text-yellow-700 bg-yellow-50 px-2 py-0.5 rounded-full">⚠ Unverified</span>}
                 </td>
                 <td className="px-4 py-3 text-gray-500">{u._count?.listings || 0}</td>
                 <td className="px-4 py-3">

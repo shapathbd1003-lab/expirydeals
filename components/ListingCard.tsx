@@ -19,7 +19,7 @@ function ExpiryBadge({ days }: { days: number }) {
   if (days === 0) return <span className="text-xs px-1.5 py-0.5 rounded bg-red-500 text-white font-medium">Today!</span>
   if (days <= 2) return <span className="text-xs px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-medium">{days}d left</span>
   if (days <= 7) return <span className="text-xs px-1.5 py-0.5 rounded bg-orange-100 text-orange-700">{days}d left</span>
-  return <span className="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-700">{days}d left</span>
+  return <span className="text-xs px-1.5 py-0.5 rounded bg-orange-100 text-orange-700">{days}d left</span>
 }
 
 export function ListingCard({ listing }: { listing: Listing }) {
@@ -29,7 +29,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
 
   return (
     <Link href={`/listings/${listing.slug}`}
-      className="bg-white border border-gray-200 rounded hover:shadow-md transition-shadow group block">
+      className="bg-white border border-gray-200 rounded hover:shadow-md hover:border-orange-200 transition-shadow group block">
       {/* Image */}
       <div className="relative w-full aspect-[4/3] bg-gray-100 overflow-hidden rounded-t">
         {listing.primary_photo ? (

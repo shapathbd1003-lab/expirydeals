@@ -10,7 +10,7 @@ function ExpiryBadge({ days }: { days: number }) {
   if (days === 0) return <span className="bg-red-500 text-white px-2 py-0.5 rounded text-xs font-bold">Expires Today!</span>
   if (days <= 3) return <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-semibold">{days} days left</span>
   if (days <= 7) return <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-xs">{days} days left</span>
-  return <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs">{days} days left</span>
+  return <span className="bg-orange-50 text-green-700 px-2 py-0.5 rounded text-xs">{days} days left</span>
 }
 
 function formatDate(d: string) {
@@ -120,11 +120,11 @@ export default function ListingDetailPage() {
       {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-4 py-2 text-xs text-gray-500 flex items-center gap-1.5">
-          <Link href="/" className="hover:text-green-600">Home</Link>
+          <Link href="/" className="hover:text-orange-600">Home</Link>
           <span>/</span>
-          <Link href="/listings" className="hover:text-green-600">Listings</Link>
+          <Link href="/listings" className="hover:text-orange-600">Listings</Link>
           <span>/</span>
-          <Link href={`/listings?category=${listing.category?.slug}`} className="hover:text-green-600">{listing.category?.name}</Link>
+          <Link href={`/listings?category=${listing.category?.slug}`} className="hover:text-orange-600">{listing.category?.name}</Link>
           <span>/</span>
           <span className="text-gray-700 truncate max-w-[200px]">{listing.title}</span>
         </div>
@@ -175,7 +175,7 @@ export default function ListingDetailPage() {
               </div>
 
               <div className="flex items-baseline gap-3 mb-3">
-                <span className="text-2xl font-bold text-green-600">৳ {parseFloat(listing.discountedPrice).toLocaleString('en-BD')}</span>
+                <span className="text-2xl font-bold text-orange-600">৳ {parseFloat(listing.discountedPrice).toLocaleString('en-BD')}</span>
                 <span className="text-base text-gray-400 line-through">৳ {parseFloat(listing.originalPrice).toLocaleString('en-BD')}</span>
                 <ExpiryBadge days={listing.days_remaining} />
               </div>
@@ -215,8 +215,8 @@ export default function ListingDetailPage() {
             <div className="bg-white rounded shadow-sm border border-gray-200 p-4">
               <h2 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide">Location</h2>
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-green-600 text-lg">📍</span>
+                <div className="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-orange-600 text-lg">📍</span>
                 </div>
                 <div>
                   {listing.address && <p className="font-medium text-gray-900 text-sm">{listing.address}</p>}
@@ -224,16 +224,19 @@ export default function ListingDetailPage() {
                   <p className="text-gray-400 text-xs mt-1">Bangladesh</p>
                 </div>
               </div>
-              {/* Static map placeholder — Bikroy style green bar */}
-              <div className="mt-3 rounded overflow-hidden bg-green-50 border border-green-100 h-24 flex items-center justify-center">
-                <a
-                  href={`https://www.google.com/maps/search/${encodeURIComponent(fullLocation + ', Bangladesh')}`}
-                  target="_blank" rel="noopener noreferrer"
-                  className="text-green-600 text-sm hover:underline flex items-center gap-2"
-                >
-                  🗺️ View on Google Maps
-                </a>
-              </div>
+              {/* Google Maps link */}
+              <a
+                href={`https://www.google.com/maps/search/${encodeURIComponent(fullLocation + ', Bangladesh')}`}
+                target="_blank" rel="noopener noreferrer"
+                className="mt-3 flex items-center gap-3 bg-orange-50 border border-orange-100 rounded-lg px-4 py-3 text-sm text-orange-700 hover:bg-orange-100 transition-colors"
+              >
+                <span className="text-xl">🗺️</span>
+                <div>
+                  <p className="font-semibold">View on Google Maps</p>
+                  <p className="text-xs text-orange-500 truncate">{fullLocation}, Bangladesh</p>
+                </div>
+                <span className="ml-auto text-orange-400">→</span>
+              </a>
             </div>
 
             {/* Safety tips */}
@@ -255,13 +258,13 @@ export default function ListingDetailPage() {
             <div className="bg-white rounded shadow-sm border border-gray-200 p-4 space-y-3">
               {!contact ? (
                 <button onClick={handleContact} disabled={contactLoading}
-                  className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded text-base transition">
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded text-base transition">
                   {contactLoading ? 'Loading...' : '📞 Show Phone Number'}
                 </button>
               ) : (
                 <div className="space-y-2">
                   <a href={`tel:${contact.phone}`}
-                    className="flex items-center justify-center gap-2 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded text-base transition">
+                    className="flex items-center justify-center gap-2 w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded text-base transition">
                     📞 {contact.phone}
                   </a>
                   {contact.whatsapp_link && (
@@ -275,7 +278,7 @@ export default function ListingDetailPage() {
               )}
               {!user && (
                 <p className="text-xs text-center text-gray-400">
-                  <Link href="/login" className="text-green-600 hover:underline">Log in</Link> to see contact info
+                  <Link href="/login" className="text-orange-600 hover:underline">Log in</Link> to see contact info
                 </p>
               )}
               <button onClick={() => setReportOpen(true)} className="w-full text-xs text-gray-400 hover:text-red-500 py-1 flex items-center justify-center gap-1">
@@ -287,7 +290,7 @@ export default function ListingDetailPage() {
             <div className="bg-white rounded shadow-sm border border-gray-200 p-4">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Seller Information</h3>
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-xl font-bold text-green-600">
+                <div className="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center text-xl font-bold text-orange-600">
                   {(listing.seller?.business_name || 'S')[0].toUpperCase()}
                 </div>
                 <div>
@@ -302,7 +305,7 @@ export default function ListingDetailPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span>✅</span>
-                  <span className="text-green-600">Verified Seller</span>
+                  <span className="text-orange-600">Verified Seller</span>
                 </div>
               </div>
             </div>
@@ -331,7 +334,7 @@ export default function ListingDetailPage() {
           <div className="bg-white rounded-xl p-6 w-full max-w-sm space-y-4">
             <h3 className="font-bold text-lg">Report Listing</h3>
             {reportSent ? (
-              <p className="text-green-600">✅ Report submitted. Thank you.</p>
+              <p className="text-orange-600">✅ Report submitted. Thank you.</p>
             ) : (
               <>
                 <select className="input" value={reportReason} onChange={(e) => setReportReason(e.target.value)}>

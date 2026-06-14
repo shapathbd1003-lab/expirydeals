@@ -24,6 +24,13 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
     })
 
     if (!listing || listing.status === 'deleted') return notFound('Listing not found')
+
+    // Auto-expire if past expiry date and still active/paused
+    if ((listing.status === 'active' || listing.status === 'paused') && new Date(listing.expiryDate) < new Date()) {
+      await prisma.listing.update({ where: { id: listing.id }, data: { status: 'expired' } })
+      listing.status = 'expired'
+    }
+
     if (listing.status === 'expired') {
       return ok({
         id: listing.id,
