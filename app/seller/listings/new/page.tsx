@@ -63,7 +63,7 @@ export default function NewListingPage() {
           city: location.district,
           region: location.division,
           address: [location.upazila, location.address].filter(Boolean).join(', '),
-          status: publish ? 'active' : 'draft',
+          status: 'draft',
         }),
       })
       const data = await res.json()
@@ -92,7 +92,7 @@ export default function NewListingPage() {
         })
       }
 
-      router.push('/my/listings')
+      router.push('/my/listings?submitted=1')
     } catch {
       setError('Network error — please check your connection and try again.')
     } finally {
@@ -302,7 +302,7 @@ export default function NewListingPage() {
               </button>
               <button type="button" onClick={() => handleSubmit(true)} disabled={!canPublish}
                 className="btn-primary flex-1">
-                {loading ? 'Publishing...' : '🚀 Publish'}
+                {loading ? 'Submitting...' : '📋 Submit for Review'}
               </button>
             </div>
           </div>

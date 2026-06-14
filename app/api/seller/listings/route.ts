@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
         city: city.trim(),
         region: region?.trim() || null,
         address: address?.trim() || null,
-        status: status === 'active' ? 'active' : 'draft',
+        status: 'draft',
       },
       include: {
         category: { select: { id: true, name: true, slug: true } },

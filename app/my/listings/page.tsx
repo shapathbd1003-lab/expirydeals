@@ -2,7 +2,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 
 const STATUS_TABS = ['active', 'draft', 'paused', 'expired', 'deleted'] as const
 
@@ -105,10 +106,12 @@ function ActionModal({ listing, token, mode, onClose, onDone }: {
   )
 }
 
-export default function MyListingsPage() {
+function MyListingsContent() {
   const { user, token, loading: authLoading } = useAuth()
   const router = useRouter()
-  const [tab, setTab] = useState<typeof STATUS_TABS[number]>('active')
+  const searchParams = useSearchParams()
+  const submitted = searchParams.get('submitted') === '1'
+  const [tab, setTab] = useState<typeof STATUS_TABS[number]>(submitted ? 'draft' : 'active')
   const [listings, setListings] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [actionModal, setActionModal] = useState<{ listing: any; mode: 'sold' | 'delete' } | null>(null)
@@ -143,16 +146,6 @@ export default function MyListingsPage() {
     setListings(ls => ls.filter(l => l.id !== id))
   }
 
-  const publishDraft = async (id: string) => {
-    if (!confirm('Publish this listing now? It will go live immediately.')) return
-    await fetch(`/api/seller/listings/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-      credentials: 'include',
-      body: JSON.stringify({ status: 'active' }),
-    })
-    setListings(ls => ls.filter(l => l.id !== id))
-  }
 
   const deletePermanent = async (id: string) => {
     if (!confirm('Permanently remove this listing from the database? This cannot be undone.')) return
@@ -168,6 +161,13 @@ export default function MyListingsPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {submitted && (
+        <div className="bg-green-50 border border-green-300 rounded-xl p-4 mb-6 text-sm text-green-800">
+          <p className="font-semibold mb-1">✅ Listing submitted for review!</p>
+          <p>Your listing is pending admin approval. It will go live once approved — usually within 24 hours.</p>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">My Ads</h1>
@@ -227,9 +227,7 @@ export default function MyListingsPage() {
                 <div className="flex gap-2 mt-2 flex-wrap">
                   <Link href={`/seller/listings/${l.id}/edit`} className="text-xs btn-secondary py-1 px-2">Edit</Link>
                   {tab === 'draft' && (
-                    <button onClick={() => publishDraft(l.id)} className="text-xs bg-orange-500 hover:bg-orange-600 text-white font-semibold py-1 px-3 rounded-lg transition">
-                      🚀 Publish
-                    </button>
+                    <span className="text-xs text-orange-600 font-medium py-1 px-2 bg-orange-50 rounded-lg">⏳ Pending admin approval</span>
                   )}
                   {(tab === 'active' || tab === 'paused') && (
                     <>
@@ -264,5 +262,13 @@ export default function MyListingsPage() {
         />
       )}
     </div>
+  )
+}
+
+export default function MyListingsPage() {
+  return (
+    <Suspense>
+      <MyListingsContent />
+    </Suspense>
   )
 }
