@@ -13,6 +13,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
         seller: {
           select: {
             id: true,
+            fullName: true,
             businessName: true,
             businessCity: true,
             avatarUrl: true,
@@ -66,6 +67,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
       })),
       seller: {
         id: listing.seller.id,
+        full_name: listing.seller.fullName,
         business_name: listing.seller.businessName,
         business_city: listing.seller.businessCity,
         avatar_url: listing.seller.avatarUrl,

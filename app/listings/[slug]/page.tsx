@@ -294,11 +294,11 @@ export default function ListingDetailPage() {
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Seller Information</h3>
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center text-xl font-bold text-orange-600">
-                  {(listing.seller?.business_name || 'S')[0].toUpperCase()}
+                  {(listing.seller?.business_name || listing.seller?.full_name || 'S')[0].toUpperCase()}
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <p className="font-semibold text-gray-900 text-sm">{listing.seller?.business_name || 'Seller'}</p>
+                    <p className="font-semibold text-gray-900 text-sm">{listing.seller?.business_name || listing.seller?.full_name || 'Seller'}</p>
                     {listing.seller?.is_verified_seller && (
                       <span title="Verified Seller" className="text-orange-500 text-sm">✓</span>
                     )}
