@@ -169,6 +169,9 @@ model Listing {
   @@index([expiryDate])
   @@index([city])
   @@index([createdAt(sort: Desc)])
+  @@index([status, expiryDate])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([sellerId, status])
   @@map("listings")
 }
 
@@ -210,7 +213,7 @@ model RecentlyViewed {
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   @@id([userId, listingId])
-  @@index([userId])
+  @@index([userId, viewedAt(sort: Desc)])
   @@map("recently_viewed")
 }
 
@@ -239,6 +242,8 @@ model ListingContact {
   buyer   User    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
 
   @@index([listingId])
+  @@index([contactedAt])
+  @@index([listingId, buyerId])
   @@map("listing_contacts")
 }
 

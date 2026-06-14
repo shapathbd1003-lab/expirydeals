@@ -55,13 +55,25 @@ export async function POST(req: NextRequest) {
     const refreshToken = generateRefreshToken()
     const tokenHash = hashToken(refreshToken)
 
-    await prisma.refreshToken.create({
-      data: {
-        userId: user.id,
-        tokenHash,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      },
-    })
+    await Promise.all([
+      prisma.refreshToken.create({
+        data: {
+          userId: user.id,
+          tokenHash,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        },
+      }),
+      // Prune expired/revoked tokens for this user to keep table small
+      prisma.refreshToken.deleteMany({
+        where: {
+          userId: user.id,
+          OR: [
+            { expiresAt: { lt: new Date() } },
+            { revokedAt: { not: null } },
+          ],
+        },
+      }),
+    ])
 
     const res = NextResponse.json({
       success: true,

@@ -13,12 +13,26 @@ export async function GET(req: NextRequest) {
       where: { userId: auth.user.userId },
       orderBy: { viewedAt: 'desc' },
       take: 50,
-      include: {
+      select: {
+        viewedAt: true,
         listing: {
-          include: {
+          select: {
+            id: true,
+            slug: true,
+            title: true,
+            originalPrice: true,
+            discountedPrice: true,
+            discountPct: true,
+            quantity: true,
+            expiryDate: true,
+            city: true,
+            region: true,
+            status: true,
+            viewCount: true,
+            createdAt: true,
             category: { select: { id: true, name: true, slug: true } },
             photos: {
-              orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }],
+              orderBy: [{ isPrimary: 'desc' as const }, { sortOrder: 'asc' as const }],
               take: 1,
               select: { urlThumb: true },
             },

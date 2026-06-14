@@ -11,11 +11,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     const listing = await prisma.listing.findUnique({
       where: { id: params.id },
-      include: { photos: { select: { id: true } } },
+      select: {
+        id: true,
+        sellerId: true,
+        status: true,
+        _count: { select: { photos: true } },
+      },
     })
     if (!listing || listing.status === 'deleted') return notFound('Listing not found')
     if (listing.sellerId !== auth.user.userId) return forbidden()
-    if (listing.photos.length >= 8) return validationError('Maximum 8 photos per listing')
+    if (listing._count.photos >= 8) return validationError('Maximum 8 photos per listing')
 
     const formData = await req.formData()
     const files = formData.getAll('photos') as File[]
@@ -25,10 +30,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const MAX_SIZE = 10 * 1024 * 1024 // 10 MB
 
     const uploaded = []
-    let sortOrder = listing.photos.length
-    const isFirst = listing.photos.length === 0
+    let sortOrder = listing._count.photos
+    const isFirst = listing._count.photos === 0
 
-    for (let i = 0; i < Math.min(files.length, 8 - listing.photos.length); i++) {
+    for (let i = 0; i < Math.min(files.length, 8 - listing._count.photos); i++) {
       const file = files[i]
       if (!ALLOWED_TYPES.includes(file.type)) continue
       if (file.size > MAX_SIZE) continue

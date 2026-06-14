@@ -33,11 +33,17 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const auth = await requireAuth(req)
     if ('error' in auth) return unauthorized()
 
-    const listing = await prisma.listing.findUnique({ where: { id: params.id } })
+    const body = await req.json()
+
+    const [listing, cat] = await Promise.all([
+      prisma.listing.findUnique({ where: { id: params.id } }),
+      body.category_id != null
+        ? prisma.category.findUnique({ where: { id: parseInt(body.category_id) } })
+        : Promise.resolve(null),
+    ])
     if (!listing || listing.status === 'deleted') return notFound('Listing not found')
     if (listing.sellerId !== auth.user.userId) return forbidden()
 
-    const body = await req.json()
     const updateData: Record<string, unknown> = {}
 
     if (body.title !== undefined) updateData.title = body.title.trim()
@@ -46,7 +52,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       updateData.description = body.description.trim()
     }
     if (body.category_id !== undefined) {
-      const cat = await prisma.category.findUnique({ where: { id: parseInt(body.category_id) } })
       if (!cat || !cat.isActive) return validationError('Invalid category')
       updateData.categoryId = parseInt(body.category_id)
     }
