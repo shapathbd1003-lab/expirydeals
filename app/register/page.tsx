@@ -26,9 +26,9 @@ function RegisterForm() {
     if (!res.ok) {
       setError(data.error?.message || 'Registration failed')
     } else if (data.data?.auto_verified) {
-      router.push('/login?registered=1')
+      router.push('/login')
     } else {
-      router.push('/login?verify=1')
+      router.push(`/verify-email/pending?email=${encodeURIComponent(form.email)}`)
     }
   }
 
