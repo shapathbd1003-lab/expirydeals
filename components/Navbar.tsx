@@ -2,13 +2,14 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
+import { useLang } from '@/hooks/useLang'
 import { useRouter } from 'next/navigation'
 
 export function Navbar() {
   const { user, logout } = useAuth()
+  const { lang, setLang } = useLang()
   const [menuOpen, setMenuOpen] = useState(false)
   const [q, setQ] = useState('')
-  const [lang, setLang] = useState<'en' | 'bn'>('en')
   const router = useRouter()
 
   const t = {
@@ -97,7 +98,7 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-3 ml-auto flex-shrink-0">
             {/* Language toggle */}
             <button
-              onClick={() => setLang(l => l === 'en' ? 'bn' : 'en')}
+              onClick={() => setLang(lang === 'en' ? 'bn' : 'en')}
               aria-label={lang === 'en' ? 'Switch to Bangla' : 'Switch to English'}
               className="text-xs border border-gray-200 rounded-full px-2.5 py-1 text-gray-500 hover:border-orange-400 hover:text-orange-600 transition-colors font-medium"
             >
@@ -165,7 +166,7 @@ export function Navbar() {
           </form>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setLang(l => l === 'en' ? 'bn' : 'en')}
+              onClick={() => setLang(lang === 'en' ? 'bn' : 'en')}
               className="text-xs border border-gray-200 rounded-full px-2.5 py-1 text-gray-500 hover:border-orange-400 hover:text-orange-600 transition-colors"
             >
               {lang === 'en' ? 'বাংলা' : 'English'}

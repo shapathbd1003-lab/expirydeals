@@ -3,6 +3,7 @@ import './globals.css'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { AuthProvider } from '@/hooks/useAuth'
+import { LangProvider } from '@/hooks/useLang'
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://expirydeals.com'
 
@@ -26,9 +27,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="min-h-screen flex flex-col">
         <AuthProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <LangProvider>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </LangProvider>
         </AuthProvider>
       </body>
     </html>
