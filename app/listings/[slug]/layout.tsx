@@ -60,6 +60,64 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   }
 }
 
-export default function ListingLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>
+export default async function ListingLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode
+  params: { slug: string }
+}) {
+  const listing = await prisma.listing.findUnique({
+    where: { slug: params.slug },
+    select: {
+      title: true,
+      description: true,
+      discountedPrice: true,
+      originalPrice: true,
+      expiryDate: true,
+      status: true,
+      city: true,
+      region: true,
+      photos: { where: { isPrimary: true }, select: { urlMedium: true }, take: 1 },
+      category: { select: { name: true } },
+    },
+  })
+
+  const isActive = listing && listing.status === 'active' && new Date(listing.expiryDate) >= new Date()
+
+  const jsonLd = isActive ? {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: listing.title,
+    description: listing.description.slice(0, 200),
+    image: listing.photos[0]?.urlMedium,
+    category: listing.category?.name,
+    offers: {
+      '@type': 'Offer',
+      price: Number(listing.discountedPrice).toFixed(2),
+      priceCurrency: 'BDT',
+      availability: 'https://schema.org/InStock',
+      priceValidUntil: listing.expiryDate.toISOString().split('T')[0],
+      itemCondition: 'https://schema.org/NewCondition',
+      seller: {
+        '@type': 'LocalBusiness',
+        name: 'ExpiryDeals Seller',
+        addressLocality: listing.city,
+        addressRegion: listing.region ?? undefined,
+        addressCountry: 'BD',
+      },
+    },
+  } : null
+
+  return (
+    <>
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
+      {children}
+    </>
+  )
 }

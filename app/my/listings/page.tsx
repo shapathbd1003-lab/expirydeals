@@ -103,8 +103,9 @@ export default function MyListingsPage() {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       credentials: 'include',
     })
-      .then(r => r.json())
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
       .then(d => setListings(d.data || []))
+      .catch(() => setListings([]))
       .finally(() => setLoading(false))
   }
 

@@ -26,8 +26,8 @@ export default function HomePage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/listings/featured').then(r => r.json()),
-      fetch('/api/categories').then(r => r.json()),
+      fetch('/api/listings/featured').then(r => r.json()).catch(() => ({ data: null })),
+      fetch('/api/categories').then(r => r.json()).catch(() => ({ data: [] })),
       fetch('/api/stats/public').then(r => r.json()).catch(() => ({ data: null })),
     ]).then(([feat, cats, st]) => {
       setFeatured(feat.data || { just_added: [], expiring_soon: [] })
@@ -231,45 +231,6 @@ export default function HomePage() {
         </section>
 
       </div>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-8 py-8 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid sm:grid-cols-3 gap-6 text-sm text-gray-600 mb-6">
-            <div>
-              <p className="font-black text-lg mb-1">
-                <span className="text-orange-500">Expiry</span><span className="text-gray-800">Deals</span>
-                <span className="text-gray-400 text-sm font-medium"> BD</span>
-              </p>
-              <p className="text-xs text-gray-500 leading-relaxed">
-                Bangladesh&apos;s marketplace for near-expiry products. Save money, reduce food waste.
-              </p>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-700 mb-2">Quick Links</p>
-              <ul className="space-y-1 text-xs">
-                <li><Link href="/listings" className="hover:text-orange-600">All Deals</Link></li>
-                <li><Link href="/seller/listings/new" className="hover:text-orange-600">Post Free Ad</Link></li>
-                <li><Link href="/login" className="hover:text-orange-600">Log in</Link></li>
-                <li><Link href="/register" className="hover:text-orange-600">Register</Link></li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-700 mb-2">Popular Categories</p>
-              <ul className="space-y-1 text-xs">
-                <li><Link href="/listings?category=food-groceries" className="hover:text-orange-600">Food & Groceries</Link></li>
-                <li><Link href="/listings?category=dairy-eggs" className="hover:text-orange-600">Dairy & Eggs</Link></li>
-                <li><Link href="/listings?category=cosmetics-beauty" className="hover:text-orange-600">Cosmetics</Link></li>
-                <li><Link href="/listings?category=health-wellness" className="hover:text-orange-600">Health & Wellness</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-100 pt-4 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-gray-400">
-            <p>© 2025 ExpiryDeals Bangladesh. All rights reserved.</p>
-            <Link href="/terms" className="hover:text-orange-600">Terms of Service</Link>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

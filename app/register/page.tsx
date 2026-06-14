@@ -37,30 +37,30 @@ function RegisterForm() {
       {error && <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg">{error}</div>}
 
       <div>
-        <label className="label">Full Name</label>
-        <input type="text" required className="input"
+        <label htmlFor="reg-name" className="label">Full Name</label>
+        <input id="reg-name" type="text" required className="input"
           value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
       </div>
       <div>
-        <label className="label">Email</label>
-        <input type="email" required className="input"
+        <label htmlFor="reg-email" className="label">Email</label>
+        <input id="reg-email" type="email" required className="input"
           value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
       </div>
       <div>
-        <label className="label">Phone</label>
-        <input type="tel" className="input" placeholder="01XXXXXXXXX"
+        <label htmlFor="reg-phone" className="label">Phone</label>
+        <input id="reg-phone" type="tel" className="input" placeholder="01XXXXXXXXX"
           value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
       </div>
       <div>
-        <label className="label">Password</label>
-        <input type="password" required minLength={8} className="input"
+        <label htmlFor="reg-password" className="label">Password</label>
+        <input id="reg-password" type="password" required minLength={8} className="input"
           value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
         <p className="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
       </div>
 
       <p className="text-xs text-gray-500">
         By signing up you agree to our{' '}
-        <Link href="/terms" className="text-green-600 hover:underline">Terms of Service</Link>.
+        <Link href="/terms" className="text-orange-600 hover:underline">Terms of Service</Link>.
       </p>
 
       <button type="submit" disabled={loading} className="btn-primary w-full">
@@ -84,7 +84,7 @@ export default function RegisterPage() {
         </Suspense>
         <p className="text-center text-sm text-gray-600 mt-4">
           Already have an account?{' '}
-          <Link href="/login" className="text-green-600 font-medium hover:underline">Log in</Link>
+          <Link href="/login" className="text-orange-600 font-medium hover:underline">Log in</Link>
         </p>
       </div>
     </div>

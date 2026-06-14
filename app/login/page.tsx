@@ -58,24 +58,6 @@ export default function LoginPage() {
           <p className="text-gray-500 text-sm mt-1">Log in to your ExpiryDeals account</p>
         </div>
 
-        {/* Test credentials */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4 text-xs text-blue-800 space-y-2">
-          <p className="font-bold text-blue-900 mb-1">🧪 Test Accounts</p>
-          {[
-            { role: 'Buyer', email: 'buyer@test.com', pass: 'Test@1234' },
-            { role: 'Seller', email: 'seller@test.com', pass: 'Test@1234' },
-            { role: 'Admin', email: 'admin@expirydeals.com', pass: 'Admin@123456' },
-          ].map(({ role, email, pass }) => (
-            <button key={role} type="button"
-              onClick={() => setForm({ email, password: pass })}
-              className="w-full text-left flex items-center justify-between bg-white border border-blue-200 rounded-lg px-3 py-2 hover:bg-blue-50 transition">
-              <span><span className="font-semibold">{role}:</span> {email}</span>
-              <span className="text-blue-500 font-mono">{pass}</span>
-            </button>
-          ))}
-          <p className="text-blue-500 text-center">Click any row to auto-fill</p>
-        </div>
-
         {unverified && (
           <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-4 mb-4 text-sm text-yellow-800">
             <p className="font-semibold mb-1">📧 Email not verified</p>
@@ -95,16 +77,16 @@ export default function LoginPage() {
             <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg">{error}</div>
           )}
           <div>
-            <label className="label">Email</label>
+            <label htmlFor="login-email" className="label">Email</label>
             <input
-              type="email" required className="input"
+              id="login-email" type="email" required className="input"
               value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
           </div>
           <div>
-            <label className="label">Password</label>
+            <label htmlFor="login-password" className="label">Password</label>
             <input
-              type="password" required className="input"
+              id="login-password" type="password" required className="input"
               value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
           </div>

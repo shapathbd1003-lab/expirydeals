@@ -39,15 +39,15 @@ export default function ForgotPasswordPage() {
         </div>
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
           <div>
-            <label className="label">Email</label>
-            <input type="email" required className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <label htmlFor="forgot-email" className="label">Email</label>
+            <input id="forgot-email" type="email" required className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <button type="submit" disabled={loading} className="btn-primary w-full">
             {loading ? 'Sending...' : 'Send Reset Link'}
           </button>
         </form>
         <p className="text-center text-sm text-gray-600 mt-4">
-          <Link href="/login" className="text-green-600 hover:underline">Back to Login</Link>
+          <Link href="/login" className="text-orange-600 hover:underline">Back to Login</Link>
         </p>
       </div>
     </div>

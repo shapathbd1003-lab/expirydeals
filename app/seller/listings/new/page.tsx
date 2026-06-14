@@ -50,52 +50,54 @@ export default function NewListingPage() {
   const validImageUrls = imageUrls.filter(u => u.trim().startsWith('http'))
 
   const handleSubmit = async (publish: boolean) => {
-    setError(''); setLoading(true)
-    const res = await fetch('/api/seller/listings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-      credentials: 'include',
-      body: JSON.stringify({
-        ...form,
-        city: location.district,
-        region: location.division,
-        address: [location.upazila, location.address].filter(Boolean).join(', '),
-        status: publish ? 'active' : 'draft',
-      }),
-    })
-    const data = await res.json()
-    if (!res.ok) { setError(data.error?.message || 'Failed'); setLoading(false); return }
-
-    const listingId = data.data.id
-
-    // Save PC files as data URLs (no storage service needed)
-    if (photos.length > 0) {
-      const dataUrls = await Promise.all(photos.map(f => new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = e => resolve(e.target?.result as string)
-        reader.onerror = reject
-        reader.readAsDataURL(f)
-      })))
-      await fetch(`/api/seller/listings/${listingId}/photo-urls`, {
+    if (loading) return
+    setError('')
+    setLoading(true)
+    try {
+      const res = await fetch('/api/seller/listings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         credentials: 'include',
-        body: JSON.stringify({ urls: dataUrls }),
+        body: JSON.stringify({
+          ...form,
+          city: location.district,
+          region: location.division,
+          address: [location.upazila, location.address].filter(Boolean).join(', '),
+          status: publish ? 'active' : 'draft',
+        }),
       })
-    }
+      const data = await res.json()
+      if (!res.ok) { setError(data.error?.message || 'Failed to create listing'); return }
 
-    // Save image URLs directly as ListingPhoto records via API
-    if (photoTab === 'url' && validImageUrls.length > 0) {
-      await fetch(`/api/seller/listings/${listingId}/photo-urls`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        credentials: 'include',
-        body: JSON.stringify({ urls: validImageUrls }),
-      })
-    }
+      const listingId = data.data.id
+      const authHeaders = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
 
-    setLoading(false)
-    router.push('/my/listings')
+      if (photos.length > 0) {
+        const dataUrls = await Promise.all(photos.map(f => new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = e => resolve(e.target?.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(f)
+        })))
+        await fetch(`/api/seller/listings/${listingId}/photo-urls`, {
+          method: 'POST', headers: authHeaders, credentials: 'include',
+          body: JSON.stringify({ urls: dataUrls }),
+        })
+      }
+
+      if (photoTab === 'url' && validImageUrls.length > 0) {
+        await fetch(`/api/seller/listings/${listingId}/photo-urls`, {
+          method: 'POST', headers: authHeaders, credentials: 'include',
+          body: JSON.stringify({ urls: validImageUrls }),
+        })
+      }
+
+      router.push('/my/listings')
+    } catch {
+      setError('Network error — please check your connection and try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (authLoading) return null
@@ -119,7 +121,7 @@ export default function NewListingPage() {
         {['Details', 'Pricing', 'Location & Photos'].map((s, i) => (
           <div key={s} className="flex items-center gap-2 flex-1">
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-              step > i + 1 ? 'bg-green-600 text-white' : step === i + 1 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
+              step > i + 1 ? 'bg-orange-500 text-white' : step === i + 1 ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-500'
             }`}>{step > i + 1 ? '✓' : i + 1}</div>
             <span className={`text-xs hidden sm:block ${step === i + 1 ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>{s}</span>
             {i < 2 && <div className="flex-1 h-0.5 bg-gray-200" />}
@@ -134,19 +136,19 @@ export default function NewListingPage() {
           <div className="space-y-4">
             <h2 className="font-semibold text-gray-900">Product Details</h2>
             <div>
-              <label className="label">Product Name <span className="text-red-500">*</span></label>
-              <input className="input" required value={form.title} onChange={e => setForm({...form, title: e.target.value})} />
+              <label htmlFor="new-title" className="label">Product Name <span className="text-red-500">*</span></label>
+              <input id="new-title" className="input" required value={form.title} onChange={e => setForm({...form, title: e.target.value})} />
             </div>
             <div>
-              <label className="label">Category <span className="text-red-500">*</span></label>
-              <select className="input" required value={form.category_id} onChange={e => setForm({...form, category_id: e.target.value})}>
+              <label htmlFor="new-category" className="label">Category <span className="text-red-500">*</span></label>
+              <select id="new-category" className="input" required value={form.category_id} onChange={e => setForm({...form, category_id: e.target.value})}>
                 <option value="">Select category...</option>
                 {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="label">Description <span className="text-red-500">*</span></label>
-              <textarea className="input resize-none" rows={4} required
+              <label htmlFor="new-desc" className="label">Description <span className="text-red-500">*</span></label>
+              <textarea id="new-desc" className="input resize-none" rows={4} required
                 placeholder="Describe the product: brand, quantity, condition, pickup details, phone number etc."
                 value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
               <p className={`text-xs mt-1 ${form.description.length < 30 ? 'text-orange-500' : 'text-green-600'}`}>
@@ -174,13 +176,13 @@ export default function NewListingPage() {
             <h2 className="font-semibold text-gray-900">Pricing & Stock</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="label">Original Price (৳) <span className="text-red-500">*</span></label>
-                <input type="number" min="0.01" step="0.01" className="input" required
+                <label htmlFor="new-orig-price" className="label">Original Price (৳) <span className="text-red-500">*</span></label>
+                <input id="new-orig-price" type="number" min="0.01" step="0.01" className="input" required
                   value={form.original_price} onChange={e => setForm({...form, original_price: e.target.value})} />
               </div>
               <div>
-                <label className="label">Discounted Price (৳) <span className="text-red-500">*</span></label>
-                <input type="number" min="0.01" step="0.01" className="input" required
+                <label htmlFor="new-disc-price" className="label">Discounted Price (৳) <span className="text-red-500">*</span></label>
+                <input id="new-disc-price" type="number" min="0.01" step="0.01" className="input" required
                   value={form.discounted_price} onChange={e => setForm({...form, discounted_price: e.target.value})} />
               </div>
             </div>
@@ -191,13 +193,13 @@ export default function NewListingPage() {
             )}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="label">Quantity Available <span className="text-red-500">*</span></label>
-                <input type="number" min="1" className="input" required
+                <label htmlFor="new-qty" className="label">Quantity Available <span className="text-red-500">*</span></label>
+                <input id="new-qty" type="number" min="1" className="input" required
                   value={form.quantity} onChange={e => setForm({...form, quantity: e.target.value})} />
               </div>
               <div>
-                <label className="label">Expiry Date <span className="text-red-500">*</span></label>
-                <input type="date" className="input" required min={new Date().toISOString().split('T')[0]}
+                <label htmlFor="new-expiry" className="label">Expiry Date <span className="text-red-500">*</span></label>
+                <input id="new-expiry" type="date" className="input" required min={new Date().toISOString().split('T')[0]}
                   value={form.expiry_date} onChange={e => setForm({...form, expiry_date: e.target.value})} />
               </div>
             </div>

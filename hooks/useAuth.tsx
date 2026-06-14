@@ -41,8 +41,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then((data) => {
         if (data?.data?.access_token) {
           setTokenState(data.data.access_token)
-          const payload = JSON.parse(atob(data.data.access_token.split('.')[1]))
-          // Fetch full user data
           return fetch('/api/users/me', {
             headers: { Authorization: `Bearer ${data.data.access_token}` },
           })

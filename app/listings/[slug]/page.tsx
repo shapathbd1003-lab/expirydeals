@@ -118,7 +118,7 @@ export default function ListingDetailPage() {
   return (
     <div className="bg-gray-100 min-h-screen">
       {/* Breadcrumb */}
-      <div className="bg-white border-b border-gray-200">
+      <nav aria-label="Breadcrumb" className="bg-white border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-4 py-2 text-xs text-gray-500 flex items-center gap-1.5">
           <Link href="/" className="hover:text-orange-600">Home</Link>
           <span>/</span>
@@ -126,9 +126,9 @@ export default function ListingDetailPage() {
           <span>/</span>
           <Link href={`/listings?category=${listing.category?.slug}`} className="hover:text-orange-600">{listing.category?.name}</Link>
           <span>/</span>
-          <span className="text-gray-700 truncate max-w-[200px]">{listing.title}</span>
+          <span className="text-gray-700 truncate max-w-[200px]" aria-current="page">{listing.title}</span>
         </div>
-      </div>
+      </nav>
 
       <div className="max-w-5xl mx-auto px-4 py-5">
         <div className="grid md:grid-cols-3 gap-5">
@@ -156,7 +156,9 @@ export default function ListingDetailPage() {
                 <div className="flex gap-2 p-3 overflow-x-auto bg-gray-50 border-t border-gray-100">
                   {listing.photos.map((p: any, i: number) => (
                     <button key={p.id} onClick={() => setActivePhoto(i)}
-                      className={`flex-shrink-0 w-16 h-16 rounded overflow-hidden border-2 transition ${i === activePhoto ? 'border-green-500' : 'border-gray-200'}`}>
+                      aria-label={`View photo ${i + 1}`}
+                      aria-pressed={i === activePhoto}
+                      className={`flex-shrink-0 w-16 h-16 rounded overflow-hidden border-2 transition ${i === activePhoto ? 'border-orange-500' : 'border-gray-200'}`}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={p.urlThumb} alt="" className="object-cover w-full h-full" />
                     </button>
@@ -169,7 +171,8 @@ export default function ListingDetailPage() {
             <div className="bg-white rounded shadow-sm border border-gray-200 p-4">
               <div className="flex items-start justify-between gap-3 mb-2">
                 <h1 className="text-xl font-bold text-gray-900 leading-snug">{listing.title}</h1>
-                <button onClick={toggleFav} className="flex-shrink-0 text-2xl" title="Save">
+                <button onClick={toggleFav} className="flex-shrink-0 text-2xl"
+                  aria-label={isFav ? 'Remove from saved' : 'Save listing'}>
                   {isFav ? '❤️' : '🤍'}
                 </button>
               </div>
@@ -326,9 +329,10 @@ export default function ListingDetailPage() {
 
       {/* Report modal */}
       {reportOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          role="dialog" aria-modal="true" aria-labelledby="report-dialog-title">
           <div className="bg-white rounded-xl p-6 w-full max-w-sm space-y-4">
-            <h3 className="font-bold text-lg">Report Listing</h3>
+            <h3 id="report-dialog-title" className="font-bold text-lg">Report Listing</h3>
             {reportSent ? (
               <p className="text-orange-600">✅ Report submitted. Thank you.</p>
             ) : (

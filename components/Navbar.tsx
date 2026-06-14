@@ -64,6 +64,7 @@ export function Navbar() {
                 value={q}
                 onChange={e => setQ(e.target.value)}
                 placeholder={t.search}
+                aria-label={t.search}
                 className="flex-1 px-4 py-2.5 text-sm outline-none bg-white"
               />
               <button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white px-5 text-sm font-semibold flex-shrink-0 transition-colors">
@@ -77,6 +78,7 @@ export function Navbar() {
             {/* Language toggle */}
             <button
               onClick={() => setLang(l => l === 'en' ? 'bn' : 'en')}
+              aria-label={lang === 'en' ? 'Switch to Bangla' : 'Switch to English'}
               className="text-xs border border-gray-200 rounded-full px-2.5 py-1 text-gray-500 hover:border-orange-400 hover:text-orange-600 transition-colors font-medium"
             >
               {lang === 'en' ? 'বাং' : 'EN'}
@@ -103,7 +105,12 @@ export function Navbar() {
           </div>
 
           {/* Mobile menu toggle */}
-          <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden ml-auto p-2 text-gray-600">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+            className="md:hidden ml-auto p-2 text-gray-600"
+          >
             {menuOpen ? '✕' : '☰'}
           </button>
         </div>
@@ -132,7 +139,7 @@ export function Navbar() {
         <div className="md:hidden bg-white border-t border-gray-100 px-4 py-4 space-y-3">
           <form onSubmit={handleSearch} className="flex border border-gray-300 rounded-lg overflow-hidden">
             <input type="text" value={q} onChange={e => setQ(e.target.value)}
-              placeholder={t.search} className="flex-1 px-3 py-2.5 text-sm outline-none" />
+              placeholder={t.search} aria-label={t.search} className="flex-1 px-3 py-2.5 text-sm outline-none" />
             <button type="submit" className="bg-orange-500 text-white px-4 text-sm font-semibold">{t.searchBtn}</button>
           </form>
           <div className="flex items-center gap-2">

@@ -18,7 +18,6 @@ function ExpiryBadge({ days }: { days: number }) {
   if (days < 0) return <span className="text-xs px-1.5 py-0.5 rounded bg-gray-200 text-gray-500">Expired</span>
   if (days === 0) return <span className="text-xs px-1.5 py-0.5 rounded bg-red-500 text-white font-medium">Today!</span>
   if (days <= 2) return <span className="text-xs px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-medium">{days}d left</span>
-  if (days <= 7) return <span className="text-xs px-1.5 py-0.5 rounded bg-orange-100 text-orange-700">{days}d left</span>
   return <span className="text-xs px-1.5 py-0.5 rounded bg-orange-100 text-orange-700">{days}d left</span>
 }
 

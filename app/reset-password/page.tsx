@@ -40,12 +40,12 @@ function ResetForm() {
     <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
       {error && <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg">{error}</div>}
       <div>
-        <label className="label">New Password</label>
-        <input type="password" required minLength={8} className="input" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <label htmlFor="reset-password" className="label">New Password</label>
+        <input id="reset-password" type="password" required minLength={8} className="input" value={password} onChange={(e) => setPassword(e.target.value)} />
       </div>
       <div>
-        <label className="label">Confirm Password</label>
-        <input type="password" required className="input" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+        <label htmlFor="reset-confirm" className="label">Confirm Password</label>
+        <input id="reset-confirm" type="password" required className="input" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
       </div>
       <button type="submit" disabled={loading} className="btn-primary w-full">
         {loading ? 'Updating...' : 'Update Password'}

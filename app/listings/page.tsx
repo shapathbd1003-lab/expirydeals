@@ -40,13 +40,19 @@ function ListingsContent() {
 
   const fetchListings = useCallback(async () => {
     setLoading(true)
-    const params = new URLSearchParams()
-    Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, String(v)) })
-    const res = await fetch(`/api/listings?${params}`)
-    const data = await res.json()
-    setListings(data.data || [])
-    setPagination(data.pagination || { page: 1, perPage: 24, total: 0, totalPages: 0 })
-    setLoading(false)
+    try {
+      const params = new URLSearchParams()
+      Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, String(v)) })
+      const res = await fetch(`/api/listings?${params}`)
+      if (!res.ok) throw new Error('Server error')
+      const data = await res.json()
+      setListings(data.data || [])
+      setPagination(data.pagination || { page: 1, perPage: 24, total: 0, totalPages: 0 })
+    } catch {
+      setListings([])
+    } finally {
+      setLoading(false)
+    }
   }, [filters])
 
   useEffect(() => { fetchListings() }, [fetchListings])
@@ -186,7 +192,7 @@ function ListingsContent() {
                   key={p}
                   onClick={() => { setFilters(f => ({ ...f, page: p })) }}
                   className={`w-9 h-9 rounded-lg text-sm font-medium ${
-                    p === pagination.page ? 'bg-green-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    p === pagination.page ? 'bg-orange-500 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   {p}
