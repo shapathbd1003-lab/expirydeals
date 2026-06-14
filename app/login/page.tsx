@@ -1,12 +1,15 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
+import { Suspense } from 'react'
 
-export default function LoginPage() {
+function LoginForm() {
   const { login } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const justRegistered = searchParams.get('verify') === '1'
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [unverified, setUnverified] = useState(false)
@@ -56,6 +59,13 @@ export default function LoginPage() {
           <p className="text-gray-500 text-sm mt-1">Log in to your ExpiryDeals account</p>
         </div>
 
+        {justRegistered && (
+          <div className="bg-green-50 border border-green-300 rounded-xl p-4 mb-4 text-sm text-green-800">
+            <p className="font-semibold mb-1">📧 Check your email!</p>
+            <p>We sent a verification link to your email address. Click it to activate your account, then log in here.</p>
+          </div>
+        )}
+
         {unverified && (
           <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-4 mb-4 text-sm text-yellow-800">
             <p className="font-semibold mb-1">📧 Email not verified</p>
@@ -104,5 +114,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   )
 }
