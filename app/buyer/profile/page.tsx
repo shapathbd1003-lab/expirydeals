@@ -7,14 +7,14 @@ import Link from 'next/link'
 export default function BuyerProfilePage() {
   const { user, token, loading: authLoading, refreshUser } = useAuth()
   const router = useRouter()
-  const [form, setForm] = useState({ fullName: '', phone: '', currentPassword: '', newPassword: '', confirmPassword: '' })
+  const [form, setForm] = useState({ fullName: '', phone: '', storeName: '', currentPassword: '', newPassword: '', confirmPassword: '' })
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState('')
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/login')
-    if (user) setForm(f => ({ ...f, fullName: user.full_name || '', phone: user.phone || '' }))
+    if (user) setForm(f => ({ ...f, fullName: user.full_name || '', phone: user.phone || '', storeName: user.business_name || '' }))
   }, [user, authLoading, router])
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
@@ -33,7 +33,7 @@ export default function BuyerProfilePage() {
     }
     setSaving(true)
     try {
-      const body: any = { fullName: form.fullName, phone: form.phone }
+      const body: any = { fullName: form.fullName, phone: form.phone, business_name: form.storeName }
       if (form.newPassword) {
         body.current_password = form.currentPassword
         body.new_password = form.newPassword
@@ -77,6 +77,10 @@ export default function BuyerProfilePage() {
         <div>
           <label className="label">Phone</label>
           <input className="input" placeholder="01XXXXXXXXX" value={form.phone} onChange={e => set('phone', e.target.value)} />
+        </div>
+        <div>
+          <label className="label">Store / Business Name <span className="text-gray-400 font-normal">(shown on your listings)</span></label>
+          <input className="input" placeholder="e.g. Rahim Traders, City Mart" value={form.storeName} onChange={e => set('storeName', e.target.value)} />
         </div>
 
         <hr className="border-gray-100" />

@@ -8,13 +8,21 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const auth = await requireAuth(req, 'admin')
     if ('error' in auth) return auth.status === 403 ? forbidden() : unauthorized()
 
-    const { status } = await req.json()
-    if (!status || !['active', 'suspended', 'deleted'].includes(status)) {
-      return validationError('status must be active, suspended, or deleted')
-    }
+    const body = await req.json()
 
     const user = await prisma.user.findUnique({ where: { id: params.id } })
     if (!user) return notFound('User not found')
+
+    // Toggle seller verification
+    if (body.is_verified_seller !== undefined) {
+      await prisma.user.update({ where: { id: params.id }, data: { isVerifiedSeller: !!body.is_verified_seller } })
+      return ok({ message: body.is_verified_seller ? 'Seller verified.' : 'Seller verification removed.' })
+    }
+
+    const { status } = body
+    if (!status || !['active', 'suspended', 'deleted'].includes(status)) {
+      return validationError('status must be active, suspended, or deleted')
+    }
 
     await prisma.user.update({ where: { id: params.id }, data: { status } })
 

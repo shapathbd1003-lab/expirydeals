@@ -151,7 +151,7 @@ export default function NewListingPage() {
               <textarea id="new-desc" className="input resize-none" rows={4} required
                 placeholder="Describe the product: brand, quantity, condition, pickup details, phone number etc."
                 value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
-              <p className={`text-xs mt-1 ${form.description.length < 30 ? 'text-orange-500' : 'text-green-600'}`}>
+              <p className={`text-xs mt-1 ${form.description.length < 30 ? 'text-orange-500' : 'text-orange-600'}`}>
                 {form.description.length < 30
                   ? `${form.description.length}/30 — write ${30 - form.description.length} more characters`
                   : `✓ ${form.description.length} characters`}
@@ -187,7 +187,7 @@ export default function NewListingPage() {
               </div>
             </div>
             {discount > 0 && (
-              <div className="bg-green-50 text-green-700 text-sm px-4 py-2 rounded-lg">
+              <div className="bg-orange-50 text-orange-700 text-sm px-4 py-2 rounded-lg">
                 🎉 That&apos;s a <strong>{discount}% discount</strong>!
               </div>
             )}
@@ -250,7 +250,7 @@ export default function NewListingPage() {
                       </div>
                     ))}
                     {photos.length < 8 && (
-                      <label className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-green-500 text-gray-400 gap-1">
+                      <label className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-orange-500 text-gray-400 gap-1">
                         <span className="text-2xl">+</span>
                         <span className="text-xs">Add photo</span>
                         <input type="file" accept="image/*" multiple className="hidden" onChange={e => addPhotos(e.target.files)} />
@@ -288,7 +288,7 @@ export default function NewListingPage() {
                   ))}
                   {imageUrls.length < 8 && (
                     <button type="button" onClick={() => setImageUrls(u => [...u, ''])}
-                      className="text-sm text-green-600 hover:underline">+ Add another URL</button>
+                      className="text-sm text-orange-600 hover:underline">+ Add another URL</button>
                   )}
                 </div>
               )}

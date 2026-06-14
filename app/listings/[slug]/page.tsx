@@ -297,7 +297,15 @@ export default function ListingDetailPage() {
                   {(listing.seller?.business_name || 'S')[0].toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900 text-sm">{listing.seller?.business_name || 'Seller'}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="font-semibold text-gray-900 text-sm">{listing.seller?.business_name || 'Seller'}</p>
+                    {listing.seller?.is_verified_seller && (
+                      <span title="Verified Seller" className="text-orange-500 text-sm">✓</span>
+                    )}
+                  </div>
+                  {listing.seller?.is_verified_seller && (
+                    <span className="text-xs bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded font-medium">Verified Seller</span>
+                  )}
                   <p className="text-xs text-gray-500">Member since {new Date(listing.seller?.member_since).getFullYear()}</p>
                 </div>
               </div>

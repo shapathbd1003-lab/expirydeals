@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
         take: perPage,
         select: {
           id: true, email: true, fullName: true, role: true, status: true,
-          emailVerified: true, businessName: true, createdAt: true,
+          emailVerified: true, businessName: true, isVerifiedSeller: true, createdAt: true,
           _count: { select: { listings: true } },
         },
       }),

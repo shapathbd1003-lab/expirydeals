@@ -1,24 +1,26 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import Link from 'next/link'
 
 const STATUS_COLORS: Record<string, string> = {
   active: 'bg-green-100 text-green-700',
-  paused: 'bg-yellow-100 text-yellow-700',
+  draft: 'bg-yellow-100 text-yellow-800',
+  paused: 'bg-orange-100 text-orange-700',
   expired: 'bg-gray-100 text-gray-500',
-  sold: 'bg-blue-100 text-blue-700',
   deleted: 'bg-red-100 text-red-500',
 }
 
-export default function AdminListingsPage() {
+function AdminListingsContent() {
   const { user, token, loading: authLoading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [listings, setListings] = useState<any[]>([])
   const [total, setTotal] = useState(0)
   const [q, setQ] = useState('')
-  const [status, setStatus] = useState('')
+  const [status, setStatus] = useState(searchParams.get('status') || '')
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
 
@@ -68,8 +70,8 @@ export default function AdminListingsPage() {
           value={q} onChange={e => { setQ(e.target.value); setPage(1) }} />
         <select className="input w-auto" value={status} onChange={e => { setStatus(e.target.value); setPage(1) }}>
           <option value="">All statuses</option>
-          {['active', 'paused', 'expired', 'sold', 'deleted'].map(s => (
-            <option key={s} value={s}>{s}</option>
+          {['draft', 'active', 'paused', 'expired', 'deleted'].map(s => (
+            <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
           ))}
         </select>
       </div>
@@ -118,7 +120,16 @@ export default function AdminListingsPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
+                      {l.status === 'draft' && (
+                        <button onClick={() => doAction(l.id, 'approve')}
+                          className="text-xs bg-orange-500 hover:bg-orange-600 text-white font-semibold px-2.5 py-1 rounded-lg transition">
+                          ✅ Approve
+                        </button>
+                      )}
+                      {(l.status === 'paused' || l.status === 'expired') && (
+                        <button onClick={() => doAction(l.id, 'activate')} className="text-xs text-orange-600 hover:underline">Activate</button>
+                      )}
                       {l.status === 'active' && (
                         <button onClick={() => doAction(l.id, 'pause')} className="text-xs text-yellow-600 hover:underline">Pause</button>
                       )}
@@ -146,4 +157,8 @@ export default function AdminListingsPage() {
       )}
     </div>
   )
+}
+
+export default function AdminListingsPage() {
+  return <Suspense><AdminListingsContent /></Suspense>
 }

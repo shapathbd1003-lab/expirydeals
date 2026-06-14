@@ -28,16 +28,17 @@ export default function AdminDashboard() {
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'Total Users', value: stats.total_users, icon: '👥' },
-            { label: 'Active Listings', value: stats.total_active_listings, icon: '📦' },
-            { label: 'New This Week', value: stats.listings_created_this_week, icon: '📬' },
-            { label: 'Open Reports', value: stats.open_reports, icon: '🚩', warn: stats.open_reports > 0 },
+            { label: 'Total Users', value: stats.total_users, icon: '👥', href: '/admin/users' },
+            { label: 'Active Listings', value: stats.total_active_listings, icon: '📦', href: '/admin/listings' },
+            { label: 'Pending Approval', value: stats.pending_approval, icon: '🕐', warn: stats.pending_approval > 0, href: '/admin/listings?status=draft' },
+            { label: 'Open Reports', value: stats.open_reports, icon: '🚩', warn: stats.open_reports > 0, href: '/admin/reports' },
           ].map((s) => (
-            <div key={s.label} className={`bg-white rounded-2xl border p-5 ${s.warn ? 'border-red-200 bg-red-50' : 'border-gray-100'}`}>
+            <Link key={s.label} href={s.href}
+              className={`bg-white rounded-2xl border p-5 hover:shadow-md transition ${s.warn ? 'border-orange-300 bg-orange-50' : 'border-gray-100'}`}>
               <p className="text-2xl mb-1">{s.icon}</p>
-              <p className={`text-2xl font-bold ${s.warn ? 'text-red-700' : 'text-gray-900'}`}>{s.value}</p>
+              <p className={`text-2xl font-bold ${s.warn ? 'text-orange-700' : 'text-gray-900'}`}>{s.value}</p>
               <p className="text-sm text-gray-500">{s.label}</p>
-            </div>
+            </Link>
           ))}
         </div>
       )}
@@ -46,7 +47,8 @@ export default function AdminDashboard() {
       <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { href: '/admin/users', icon: '👥', title: 'Manage Users', desc: 'View, suspend, delete users' },
-          { href: '/admin/listings', icon: '📦', title: 'Manage Listings', desc: 'Review and moderate listings' },
+          { href: '/admin/listings?status=draft', icon: '🕐', title: 'Approve Listings', desc: `${stats?.pending_approval || 0} pending approval` },
+          { href: '/admin/listings', icon: '📦', title: 'All Listings', desc: 'Review and moderate listings' },
           { href: '/admin/reports', icon: '🚩', title: 'Reports Queue', desc: `${stats?.open_reports || 0} open reports` },
           { href: '/admin/categories', icon: '🏷️', title: 'Categories', desc: 'Add, rename, disable categories' },
         ].map((item) => (

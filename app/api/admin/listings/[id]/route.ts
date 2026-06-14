@@ -14,6 +14,24 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const existing = await prisma.listing.findUnique({ where: { id: params.id } })
     if (!existing) return notFound('Listing not found')
 
+    if (action === 'approve') {
+      if (existing.status !== 'draft') return validationError('Only draft listings can be approved')
+      const listing = await prisma.listing.update({
+        where: { id: params.id },
+        data: { status: 'active' },
+      })
+      return ok(listing)
+    }
+
+    if (action === 'activate') {
+      if (!['paused', 'expired'].includes(existing.status)) return validationError('Only paused or expired listings can be activated')
+      const listing = await prisma.listing.update({
+        where: { id: params.id },
+        data: { status: 'active' },
+      })
+      return ok(listing)
+    }
+
     if (action === 'pause') {
       const listing = await prisma.listing.update({
         where: { id: params.id },
@@ -30,7 +48,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return ok(listing)
     }
 
-    return validationError('Invalid action. Use: pause, delete')
+    return validationError('Invalid action. Use: approve, activate, pause, delete')
   } catch (e) {
     console.error(e)
     return serverError()

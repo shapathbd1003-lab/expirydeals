@@ -20,9 +20,19 @@ export function Navbar() {
       register: 'Register',
       saved: 'Saved',
       myAds: 'My Ads',
+      profile: 'Profile',
       postAd: '+ Post Ad',
       logout: 'Log out',
       admin: 'Admin',
+      catFood: 'Food & Groceries',
+      catBeverages: 'Beverages',
+      catDairy: 'Dairy & Eggs',
+      catPharma: 'Pharmaceuticals',
+      catHealth: 'Health & Wellness',
+      catBakery: 'Bakery & Snacks',
+      catCosmetics: 'Cosmetics',
+      catBaby: 'Baby & Kids',
+      catPet: 'Pet Supplies',
     },
     bn: {
       search: 'কী খুঁজছেন?',
@@ -32,9 +42,19 @@ export function Navbar() {
       register: 'নিবন্ধন',
       saved: 'সেভ করা',
       myAds: 'আমার বিজ্ঞাপন',
+      profile: 'প্রোফাইল',
       postAd: '+ বিজ্ঞাপন দিন',
       logout: 'লগ আউট',
       admin: 'অ্যাডমিন',
+      catFood: 'খাদ্য ও মুদিপণ্য',
+      catBeverages: 'পানীয়',
+      catDairy: 'দুগ্ধ ও ডিম',
+      catPharma: 'ওষুধপত্র',
+      catHealth: 'স্বাস্থ্য ও সুস্থতা',
+      catBakery: 'বেকারি ও স্ন্যাকস',
+      catCosmetics: 'প্রসাধনী',
+      catBaby: 'শিশু ও বাচ্চা',
+      catPet: 'পোষা প্রাণীর সামগ্রী',
     },
   }[lang]
 
@@ -98,6 +118,7 @@ export function Navbar() {
               <>
                 <Link href="/my/favorites" className="text-sm text-gray-600 hover:text-orange-600 font-medium">{t.saved}</Link>
                 <Link href="/my/listings" className="text-sm text-gray-600 hover:text-orange-600 font-medium">{t.myAds}</Link>
+                <Link href="/buyer/profile" className="text-sm text-gray-600 hover:text-orange-600 font-medium">{t.profile}</Link>
                 <Link href="/seller/listings/new" className="btn-primary">{t.postAd}</Link>
                 <button onClick={logout} className="text-sm text-gray-400 hover:text-red-500">{t.logout}</button>
               </>
@@ -121,15 +142,15 @@ export function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-6 h-10 text-xs font-medium text-gray-600 overflow-x-auto">
             <Link href="/listings" className="hover:text-orange-600 whitespace-nowrap">{t.allAds}</Link>
-            <Link href="/listings?category=food-groceries" className="hover:text-orange-600 whitespace-nowrap">Food & Groceries</Link>
-            <Link href="/listings?category=beverages" className="hover:text-orange-600 whitespace-nowrap">Beverages</Link>
-            <Link href="/listings?category=dairy-eggs" className="hover:text-orange-600 whitespace-nowrap">Dairy & Eggs</Link>
-            <Link href="/listings?category=pharmaceuticals" className="hover:text-orange-600 whitespace-nowrap">Pharmaceuticals</Link>
-            <Link href="/listings?category=health-wellness" className="hover:text-orange-600 whitespace-nowrap">Health & Wellness</Link>
-            <Link href="/listings?category=bakery-snacks" className="hover:text-orange-600 whitespace-nowrap">Bakery & Snacks</Link>
-            <Link href="/listings?category=cosmetics-beauty" className="hover:text-orange-600 whitespace-nowrap">Cosmetics</Link>
-            <Link href="/listings?category=baby-kids" className="hover:text-orange-600 whitespace-nowrap">Baby & Kids</Link>
-            <Link href="/listings?category=pet-supplies" className="hover:text-orange-600 whitespace-nowrap">Pet Supplies</Link>
+            <Link href="/listings?category=food-groceries" className="hover:text-orange-600 whitespace-nowrap">{t.catFood}</Link>
+            <Link href="/listings?category=beverages" className="hover:text-orange-600 whitespace-nowrap">{t.catBeverages}</Link>
+            <Link href="/listings?category=dairy-eggs" className="hover:text-orange-600 whitespace-nowrap">{t.catDairy}</Link>
+            <Link href="/listings?category=pharmaceuticals" className="hover:text-orange-600 whitespace-nowrap">{t.catPharma}</Link>
+            <Link href="/listings?category=health-wellness" className="hover:text-orange-600 whitespace-nowrap">{t.catHealth}</Link>
+            <Link href="/listings?category=bakery-snacks" className="hover:text-orange-600 whitespace-nowrap">{t.catBakery}</Link>
+            <Link href="/listings?category=cosmetics-beauty" className="hover:text-orange-600 whitespace-nowrap">{t.catCosmetics}</Link>
+            <Link href="/listings?category=baby-kids" className="hover:text-orange-600 whitespace-nowrap">{t.catBaby}</Link>
+            <Link href="/listings?category=pet-supplies" className="hover:text-orange-600 whitespace-nowrap">{t.catPet}</Link>
           </div>
         </div>
       </div>
@@ -164,6 +185,7 @@ export function Navbar() {
                 <>
                   <Link href="/my/listings" onClick={() => setMenuOpen(false)} className="block text-sm text-gray-700 py-1.5">{t.myAds}</Link>
                   <Link href="/my/favorites" onClick={() => setMenuOpen(false)} className="block text-sm text-gray-700 py-1.5">{t.saved}</Link>
+                  <Link href="/buyer/profile" onClick={() => setMenuOpen(false)} className="block text-sm text-gray-700 py-1.5">{t.profile}</Link>
                   <Link href="/seller/listings/new" onClick={() => setMenuOpen(false)} className="block btn-primary text-center">{t.postAd}</Link>
                 </>
               )}

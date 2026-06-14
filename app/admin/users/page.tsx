@@ -45,6 +45,16 @@ export default function AdminUsersPage() {
     fetchUsers()
   }
 
+  const toggleVerified = async (id: string, currentValue: boolean) => {
+    await fetch(`/api/admin/users/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      credentials: 'include',
+      body: JSON.stringify({ is_verified_seller: !currentValue }),
+    })
+    fetchUsers()
+  }
+
   if (authLoading) return null
 
   return (
@@ -73,13 +83,14 @@ export default function AdminUsersPage() {
               <th className="text-left px-4 py-3 text-gray-600 font-medium">Role</th>
               <th className="text-left px-4 py-3 text-gray-600 font-medium">Status</th>
               <th className="text-left px-4 py-3 text-gray-600 font-medium">Email</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium">Verified</th>
               <th className="text-left px-4 py-3 text-gray-600 font-medium">Listings</th>
               <th className="text-left px-4 py-3 text-gray-600 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {loading ? (
-              <tr><td colSpan={7} className="text-center py-8 text-gray-400">Loading...</td></tr>
+              <tr><td colSpan={8} className="text-center py-8 text-gray-400">Loading...</td></tr>
             ) : users.map((u: any) => (
               <tr key={u.id} className="hover:bg-gray-50">
                 <td className="px-4 py-3 font-medium text-gray-900">{u.fullName}</td>
@@ -100,6 +111,15 @@ export default function AdminUsersPage() {
                     ? <span className="text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded-full">✓ Verified</span>
                     : <span className="text-xs text-yellow-700 bg-yellow-50 px-2 py-0.5 rounded-full">⚠ Unverified</span>}
                 </td>
+                <td className="px-4 py-3">
+                  <button onClick={() => toggleVerified(u.id, u.isVerifiedSeller)}
+                    className={`text-xs px-2 py-0.5 rounded-full border transition ${u.isVerifiedSeller
+                      ? 'bg-orange-100 text-orange-700 border-orange-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
+                      : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200'
+                    }`}>
+                    {u.isVerifiedSeller ? '✓ Verified Seller' : 'Mark Verified'}
+                  </button>
+                </td>
                 <td className="px-4 py-3 text-gray-500">{u._count?.listings || 0}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
@@ -107,7 +127,7 @@ export default function AdminUsersPage() {
                       <button onClick={() => updateStatus(u.id, 'suspended')} className="text-xs text-orange-600 hover:underline">Suspend</button>
                     )}
                     {u.status === 'suspended' && (
-                      <button onClick={() => updateStatus(u.id, 'active')} className="text-xs text-green-600 hover:underline">Reactivate</button>
+                      <button onClick={() => updateStatus(u.id, 'active')} className="text-xs text-orange-600 hover:underline">Reactivate</button>
                     )}
                     {u.role !== 'admin' && (
                       <button onClick={() => { if(confirm('Delete user?')) updateStatus(u.id, 'deleted') }}

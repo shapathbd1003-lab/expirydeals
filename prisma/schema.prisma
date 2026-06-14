@@ -57,6 +57,7 @@ model User {
   businessDesc   String?    @map("business_desc")
   businessCity   String?    @map("business_city")
   businessRegion String?    @map("business_region")
+  isVerifiedSeller Boolean  @default(false) @map("is_verified_seller")
   status         UserStatus @default(pending_verification)
   emailVerified  Boolean    @default(false) @map("email_verified")
   createdAt      DateTime   @default(now()) @map("created_at")

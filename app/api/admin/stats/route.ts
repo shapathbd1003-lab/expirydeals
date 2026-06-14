@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 
     const [
       totalUsers, totalAdmins, totalActiveListings,
-      listingsThisWeek, contactsThisWeek, openReports,
+      listingsThisWeek, contactsThisWeek, openReports, pendingApproval,
     ] = await Promise.all([
       prisma.user.count({ where: { status: { not: 'deleted' } } }),
       prisma.user.count({ where: { role: 'admin', status: { not: 'deleted' } } }),
@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
       prisma.listing.count({ where: { createdAt: { gte: weekAgo } } }),
       prisma.listingContact.count({ where: { contactedAt: { gte: weekAgo } } }),
       prisma.report.count({ where: { status: 'open' } }),
+      prisma.listing.count({ where: { status: 'draft' } }),
     ])
 
     return ok({
@@ -29,6 +30,7 @@ export async function GET(req: NextRequest) {
       listings_created_this_week: listingsThisWeek,
       contact_clicks_this_week: contactsThisWeek,
       open_reports: openReports,
+      pending_approval: pendingApproval,
     })
   } catch (e) {
     console.error(e)

@@ -11,6 +11,7 @@ interface AuthUser {
   email_verified: boolean
   phone?: string
   city?: string
+  business_name?: string
 }
 
 interface AuthContext {

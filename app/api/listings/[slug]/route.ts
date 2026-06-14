@@ -16,6 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
             businessName: true,
             businessCity: true,
             avatarUrl: true,
+            isVerifiedSeller: true,
             createdAt: true,
             // phone is intentionally excluded — returned only via /contact
           },
@@ -68,6 +69,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
         business_name: listing.seller.businessName,
         business_city: listing.seller.businessCity,
         avatar_url: listing.seller.avatarUrl,
+        is_verified_seller: listing.seller.isVerifiedSeller,
         member_since: listing.seller.createdAt,
       },
       viewCount: listing.viewCount,
