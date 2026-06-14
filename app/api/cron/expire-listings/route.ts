@@ -1,18 +1,20 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { ok, serverError } from '@/lib/response'
+import { err } from '@/lib/response'
 
-// Called by a cron job or Railway cron — protect with a secret header
 export async function POST(req: NextRequest) {
+  // Always require the cron secret — fail closed if not set
   const secret = req.headers.get('x-cron-secret')
-  if (process.env.CRON_SECRET && secret !== process.env.CRON_SECRET) {
-    return ok({ error: 'Unauthorized' })
+  const cronSecret = process.env.CRON_SECRET
+  if (!cronSecret || secret !== cronSecret) {
+    return err('UNAUTHORIZED', 'Invalid or missing cron secret', 401)
   }
 
   try {
     const result = await prisma.listing.updateMany({
       where: {
-        status: 'active',
+        status: { in: ['active', 'paused'] },
         expiryDate: { lt: new Date() },
       },
       data: { status: 'expired' },

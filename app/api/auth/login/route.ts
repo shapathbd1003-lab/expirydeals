@@ -9,8 +9,27 @@ import {
 } from '@/lib/auth'
 import { ok, err, serverError } from '@/lib/response'
 
+// Brute-force protection: max 10 login attempts per IP per 15 minutes
+const loginAttempts = new Map<string, { count: number; resetAt: number }>()
+function checkLoginRate(ip: string): boolean {
+  const now = Date.now()
+  const entry = loginAttempts.get(ip)
+  if (!entry || entry.resetAt < now) {
+    loginAttempts.set(ip, { count: 1, resetAt: now + 15 * 60 * 1000 })
+    return true
+  }
+  if (entry.count >= 10) return false
+  entry.count++
+  return true
+}
+
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+    if (!checkLoginRate(ip)) {
+      return err('RATE_LIMITED', 'Too many login attempts. Try again in 15 minutes.', 429)
+    }
+
     const { email, password } = await req.json()
     if (!email || !password) {
       return err('VALIDATION_ERROR', 'email and password are required', 400)

@@ -1,6 +1,6 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { generateAccessToken, hashToken } from '@/lib/auth'
+import { generateAccessToken, generateRefreshToken, hashToken, setRefreshTokenCookie } from '@/lib/auth'
 import { ok, err, serverError } from '@/lib/response'
 
 export async function POST(req: NextRequest) {
@@ -20,13 +20,26 @@ export async function POST(req: NextRequest) {
       return err('FORBIDDEN', 'Account is not active', 403)
     }
 
-    const accessToken = generateAccessToken({
-      userId: user.id,
-      role: user.role,
-      email: user.email,
-    })
+    // Rotate: revoke old token, issue new one
+    const newRefreshToken = generateRefreshToken()
+    const newTokenHash = hashToken(newRefreshToken)
 
-    return ok({ access_token: accessToken, expires_in: 900 })
+    await prisma.$transaction([
+      prisma.refreshToken.update({ where: { id: record.id }, data: { revokedAt: new Date() } }),
+      prisma.refreshToken.create({
+        data: {
+          userId: user.id,
+          tokenHash: newTokenHash,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        },
+      }),
+    ])
+
+    const accessToken = generateAccessToken({ userId: user.id, role: user.role, email: user.email })
+
+    const res = NextResponse.json({ success: true, data: { access_token: accessToken, expires_in: 900 } })
+    res.cookies.set(setRefreshTokenCookie(newRefreshToken))
+    return res
   } catch (e) {
     console.error(e)
     return serverError()

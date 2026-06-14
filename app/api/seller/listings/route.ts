@@ -67,9 +67,16 @@ export async function POST(req: NextRequest) {
     if (!title || !category_id || !description || !original_price || !discounted_price || !quantity || !expiry_date || !city) {
       return validationError('title, category_id, description, original_price, discounted_price, quantity, expiry_date, and city are required')
     }
-    if (parseFloat(discounted_price) >= parseFloat(original_price)) {
+    const origNum = parseFloat(original_price)
+    const discNum = parseFloat(discounted_price)
+    if (isNaN(origNum) || origNum <= 0) return validationError('original_price must be a positive number')
+    if (isNaN(discNum) || discNum <= 0) return validationError('discounted_price must be a positive number')
+    if (origNum > 9_999_999) return validationError('original_price is too large')
+    if (discNum >= origNum) {
       return validationError('discounted_price must be less than original_price')
     }
+    const qty = parseInt(quantity)
+    if (isNaN(qty) || qty < 1 || qty > 100_000) return validationError('quantity must be between 1 and 100,000')
     if (description.length < 30) {
       return validationError('description must be at least 30 characters')
     }

@@ -2,10 +2,26 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword, generateVerificationToken } from '@/lib/auth'
 import { sendVerificationEmail } from '@/lib/email'
-import { ok, conflict, validationError, serverError } from '@/lib/response'
+import { ok, conflict, validationError, err, serverError } from '@/lib/response'
+
+const registerAttempts = new Map<string, { count: number; resetAt: number }>()
+function checkRegisterRate(ip: string): boolean {
+  const now = Date.now()
+  const entry = registerAttempts.get(ip)
+  if (!entry || entry.resetAt < now) {
+    registerAttempts.set(ip, { count: 1, resetAt: now + 60 * 60 * 1000 })
+    return true
+  }
+  if (entry.count >= 5) return false
+  entry.count++
+  return true
+}
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+    if (!checkRegisterRate(ip)) return err('RATE_LIMITED', 'Too many accounts created. Try again later.', 429)
+
     const body = await req.json()
     const { email, password, full_name, phone } = body
 

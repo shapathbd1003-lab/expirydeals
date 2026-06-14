@@ -1,18 +1,24 @@
-import { NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
+import { requireAuth } from '@/lib/auth'
+import { ok, unauthorized, forbidden, serverError } from '@/lib/response'
 import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+// Admin-only debug endpoint — never exposes secrets
+export async function GET(req: NextRequest) {
   try {
+    const auth = await requireAuth(req, 'admin')
+    if ('error' in auth) return auth.status === 403 ? forbidden() : unauthorized()
+
     const count = await prisma.listing.count()
-    const dbUrl = process.env.DATABASE_URL
-    return NextResponse.json({
+    return ok({
       listing_count: count,
-      db_url_prefix: dbUrl ? dbUrl.substring(0, 50) + '...' : 'NOT SET',
       env: process.env.NODE_ENV,
+      db_connected: true,
     })
   } catch (e: any) {
-    return NextResponse.json({ error: e.message, db_url_prefix: (process.env.DATABASE_URL || 'NOT SET').substring(0, 50) }, { status: 500 })
+    console.error(e)
+    return serverError()
   }
 }

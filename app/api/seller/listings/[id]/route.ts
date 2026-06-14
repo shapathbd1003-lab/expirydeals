@@ -73,6 +73,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     // Recalculate discount pct if prices changed
     const newOriginal = (updateData.originalPrice as number) || Number(listing.originalPrice)
     const newDiscounted = (updateData.discountedPrice as number) || Number(listing.discountedPrice)
+    if (newOriginal <= 0 || newOriginal > 9_999_999) return validationError('original_price out of valid range')
+    if (newDiscounted <= 0) return validationError('discounted_price must be positive')
     if (newDiscounted >= newOriginal) return validationError('discounted_price must be less than original_price')
     updateData.discountPct = discountPct(newOriginal, newDiscounted)
 
