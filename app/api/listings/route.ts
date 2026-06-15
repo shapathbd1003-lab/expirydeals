@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { paginated, serverError } from '@/lib/response'
 import { daysRemaining } from '@/lib/slugify'
+import { getAuthUser } from '@/lib/auth'
 import { Prisma } from '@prisma/client'
 
 const PHOTO_SELECT = {
@@ -31,9 +32,13 @@ export async function GET(req: NextRequest) {
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
     const perPage = Math.min(48, Math.max(1, parseInt(searchParams.get('per_page') || '24')))
 
+    // Exclude the logged-in user's own listings (sellers shouldn't see their own items in browse)
+    const authUser = await getAuthUser(req)
+
     const where: Prisma.ListingWhereInput = {
       status: 'active',
       expiryDate: { gte: new Date() },
+      ...(authUser ? { sellerId: { not: authUser.userId } } : {}),
     }
 
     if (q) {

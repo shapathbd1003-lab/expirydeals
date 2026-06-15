@@ -317,6 +317,24 @@ export default function ListingDetailPage() {
               </div>
             </div>
 
+            {/* Location map */}
+            <div className="bg-white rounded shadow-sm border border-gray-200 p-4">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Location</h3>
+              <p className="text-sm text-gray-700 mb-2">📍 {[listing.address, listing.city, listing.region].filter(Boolean).join(', ')}, Bangladesh</p>
+              <div className="rounded overflow-hidden border border-gray-100">
+                <iframe
+                  title="Listing location"
+                  width="100%"
+                  height="180"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent([listing.address, listing.city, 'Bangladesh'].filter(Boolean).join(', '))}&output=embed&z=13`}
+                />
+              </div>
+            </div>
+
             {/* Ad details sidebar */}
             <div className="bg-white rounded shadow-sm border border-gray-200 p-4">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Ad Details</h3>
