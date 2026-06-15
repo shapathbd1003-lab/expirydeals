@@ -317,24 +317,6 @@ export default function ListingDetailPage() {
               </div>
             </div>
 
-            {/* Location map */}
-            <div className="bg-white rounded shadow-sm border border-gray-200 p-4">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Location</h3>
-              <p className="text-sm text-gray-700 mb-2">📍 {[listing.address, listing.city, listing.region].filter(Boolean).join(', ')}, Bangladesh</p>
-              <div className="rounded overflow-hidden border border-gray-100">
-                <iframe
-                  title="Listing location"
-                  width="100%"
-                  height="180"
-                  style={{ border: 0 }}
-                  loading="lazy"
-                  allowFullScreen
-                  referrerPolicy="no-referrer-when-downgrade"
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent([listing.address, listing.city, 'Bangladesh'].filter(Boolean).join(', '))}&output=embed&z=13`}
-                />
-              </div>
-            </div>
-
             {/* Ad details sidebar */}
             <div className="bg-white rounded shadow-sm border border-gray-200 p-4">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Ad Details</h3>
@@ -344,7 +326,19 @@ export default function ListingDetailPage() {
                   <tr><td className="py-1.5 text-gray-400">Posted</td><td className="py-1.5 text-right">{formatDate(listing.createdAt)}</td></tr>
                   <tr><td className="py-1.5 text-gray-400">Expiry</td><td className="py-1.5 text-right">{formatDate(listing.expiryDate)}</td></tr>
                   <tr><td className="py-1.5 text-gray-400">Views</td><td className="py-1.5 text-right">{listing.viewCount}</td></tr>
-                  <tr><td className="py-1.5 text-gray-400">Location</td><td className="py-1.5 text-right">{listing.city}</td></tr>
+                  <tr>
+                    <td className="py-1.5 text-gray-400">Location</td>
+                    <td className="py-1.5 text-right">
+                      <a
+                        href={`https://www.google.com/maps/search/${encodeURIComponent([listing.address, listing.city, 'Bangladesh'].filter(Boolean).join(', '))}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-orange-600 hover:underline"
+                      >
+                        📍 {listing.city}
+                      </a>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
