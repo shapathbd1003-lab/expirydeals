@@ -173,7 +173,7 @@ function MyListingsContent() {
           <h1 className="text-2xl font-bold text-gray-900">My Ads</h1>
           <p className="text-gray-500 text-sm">{user?.full_name}</p>
         </div>
-        <Link href="/seller/listings/new" className="btn-primary">+ Post New Ad</Link>
+        <Link href="/seller/listings/new" className="btn-primary">+ Post New Item</Link>
       </div>
 
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6 flex-wrap">
