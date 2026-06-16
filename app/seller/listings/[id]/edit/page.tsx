@@ -13,7 +13,7 @@ export default function EditListingPage() {
   const [form, setForm] = useState<any>(null)
   const [categories, setCategories] = useState<any[]>([])
   const [existingPhotos, setExistingPhotos] = useState<any[]>([])
-  const [location, setLocation] = useState({ division: '', district: '', upazila: '', address: '' })
+  const [location, setLocation] = useState<{ division: string; district: string; upazila: string; address: string } | null>(null)
   const [imageUrls, setImageUrls] = useState<string[]>([''])
   const [newFiles, setNewFiles] = useState<File[]>([])
   const [newPreviews, setNewPreviews] = useState<string[]>([])
@@ -51,6 +51,7 @@ export default function EditListingPage() {
         }
       }
       setLocation({ division, district, upazila, address: freeAddress })
+
       setForm({
         title: d.title,
         description: d.description || '',
@@ -86,9 +87,9 @@ export default function EditListingPage() {
           discounted_price: parseFloat(form.discountedPrice),
           quantity: parseInt(form.quantity),
           expiry_date: form.expiryDate,
-          city: location.district,
-          region: location.division,
-          address: [location.upazila, location.address].filter(Boolean).join(', '),
+          city: location?.district,
+          region: location?.division,
+          address: [location?.upazila, location?.address].filter(Boolean).join(', '),
           status: form.status,
         }),
       })
@@ -179,7 +180,7 @@ export default function EditListingPage() {
           <input className="input" type="date" value={form.expiryDate} onChange={e => set('expiryDate', e.target.value)} required />
         </div>
 
-        <LocationPicker value={location} onChange={setLocation} />
+        {location && <LocationPicker value={location} onChange={setLocation} />}
 
         <div>
           <label className="label">Status</label>
