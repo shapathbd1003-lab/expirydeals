@@ -73,6 +73,8 @@ model User {
   emailVerifications EmailVerification[]
   passwordResets     PasswordReset[]
   refreshTokens      RefreshToken[]
+  reviewsGiven       Review[]           @relation("buyer_reviews")
+  reviewsReceived    Review[]           @relation("seller_reviews")
 
   @@map("users")
 }
@@ -163,6 +165,7 @@ model Listing {
   views          ListingView[]
   contacts       ListingContact[]
   reports        Report[]
+  reviews        Review[]
 
   @@index([sellerId])
   @@index([categoryId])
@@ -266,4 +269,23 @@ model Report {
   @@unique([listingId, reporterId])
   @@index([status])
   @@map("reports")
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  listingId  String   @map("listing_id")
+  buyerId    String   @map("buyer_id")
+  sellerId   String   @map("seller_id")
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyer   User    @relation("buyer_reviews", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller  User    @relation("seller_reviews", fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, buyerId])
+  @@index([sellerId])
+  @@index([listingId])
+  @@map("reviews")
 }

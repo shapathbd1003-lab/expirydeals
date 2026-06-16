@@ -30,6 +30,13 @@ export default function ListingDetailPage() {
   const [reportReason, setReportReason] = useState('spam')
   const [reportNote, setReportNote] = useState('')
   const [reportSent, setReportSent] = useState(false)
+  const [reviews, setReviews] = useState<any[]>([])
+  const [reviewAvg, setReviewAvg] = useState<number | null>(null)
+  const [reviewRating, setReviewRating] = useState(5)
+  const [reviewComment, setReviewComment] = useState('')
+  const [reviewSaving, setReviewSaving] = useState(false)
+  const [reviewError, setReviewError] = useState('')
+  const [reviewSuccess, setReviewSuccess] = useState(false)
   const viewTracked = useRef(false)
 
   useEffect(() => {
@@ -37,6 +44,13 @@ export default function ListingDetailPage() {
       .then(r => r.json())
       .then(d => { setListing(d.data); setLoading(false) })
   }, [slug])
+
+  useEffect(() => {
+    if (!slug) return
+    fetch(`/api/listings/${slug}/review`)
+      .then(r => r.json())
+      .then(d => { setReviews(d.data?.reviews || []); setReviewAvg(d.data?.average || null) })
+  }, [slug, reviewSuccess])
 
   useEffect(() => {
     if (!listing || viewTracked.current) return
@@ -345,6 +359,88 @@ export default function ListingDetailPage() {
 
           </div>
         </div>
+      </div>
+
+      {/* Reviews section */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 border-t border-gray-100">
+        <div className="flex items-center gap-3 mb-6">
+          <h2 className="text-lg font-bold text-gray-900">Buyer Reviews</h2>
+          {reviewAvg && (
+            <div className="flex items-center gap-1">
+              <span className="text-orange-500 font-bold">{reviewAvg}</span>
+              <span className="text-orange-400">{'★'.repeat(Math.round(reviewAvg))}{'☆'.repeat(5 - Math.round(reviewAvg))}</span>
+              <span className="text-gray-400 text-sm">({reviews.length})</span>
+            </div>
+          )}
+        </div>
+
+        {/* Review form — only for logged-in non-sellers */}
+        {user && listing && user.id !== listing.seller?.id && (
+          <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 mb-6">
+            <h3 className="font-semibold text-gray-900 mb-3 text-sm">Leave a Review</h3>
+            {reviewSuccess ? (
+              <p className="text-green-600 text-sm font-medium">✅ Review submitted! Thank you.</p>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-1">
+                  {[1,2,3,4,5].map(s => (
+                    <button key={s} type="button" onClick={() => setReviewRating(s)}
+                      className={`text-2xl transition ${s <= reviewRating ? 'text-orange-400' : 'text-gray-300'}`}>★</button>
+                  ))}
+                  <span className="text-sm text-gray-500 ml-2">{reviewRating}/5</span>
+                </div>
+                <textarea
+                  className="input resize-none text-sm"
+                  rows={3}
+                  placeholder="Share your experience with this seller... (optional)"
+                  value={reviewComment}
+                  onChange={e => setReviewComment(e.target.value)}
+                />
+                {reviewError && <p className="text-red-500 text-xs">{reviewError}</p>}
+                <button
+                  onClick={async () => {
+                    setReviewSaving(true)
+                    setReviewError('')
+                    const res = await fetch(`/api/listings/${slug}/review`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+                      credentials: 'include',
+                      body: JSON.stringify({ rating: reviewRating, comment: reviewComment }),
+                    })
+                    const data = await res.json()
+                    setReviewSaving(false)
+                    if (!res.ok) setReviewError(data.error?.message || 'Failed to submit review')
+                    else setReviewSuccess(true)
+                  }}
+                  disabled={reviewSaving}
+                  className="btn-primary text-sm py-1.5"
+                >
+                  {reviewSaving ? 'Submitting...' : 'Submit Review'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Reviews list */}
+        {reviews.length === 0 ? (
+          <p className="text-gray-400 text-sm">No reviews yet.</p>
+        ) : (
+          <div className="space-y-4">
+            {reviews.map(r => (
+              <div key={r.id} className="bg-white border border-gray-100 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-gray-900 text-sm">{r.buyer_name}</span>
+                    <span className="text-orange-400 text-sm">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
+                  </div>
+                  <span className="text-xs text-gray-400">{new Date(r.created_at).toLocaleDateString('en-BD', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                </div>
+                {r.comment && <p className="text-sm text-gray-600 mt-1">{r.comment}</p>}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Report modal */}
