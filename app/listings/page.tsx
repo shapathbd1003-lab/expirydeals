@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { Suspense } from 'react'
 import { ListingCard } from '@/components/ListingCard'
 import { useLang } from '@/hooks/useLang'
+import { BD_LOCATIONS } from '@/lib/bd-locations'
 
 const CATEGORY_NAMES_BN: Record<string, string> = {
   'food-groceries': 'খাদ্য ও মুদিপণ্য',
@@ -103,57 +104,16 @@ function ListingsContent() {
             </select>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900 mb-2 text-sm">{lang === 'bn' ? 'অবস্থান' : 'Location'}</h3>
+            <h3 className="font-semibold text-gray-900 mb-2 text-sm">{lang === 'bn' ? 'জেলা' : 'District'}</h3>
             <select className="input" value={filters.city} onChange={(e) => applyFilters({ city: e.target.value })}>
-              <option value="">{lang === 'bn' ? 'সব এলাকা' : 'All Locations'}</option>
-              <optgroup label={lang === 'bn' ? '── ঢাকা বিভাগ ──' : '── Dhaka Division ──'}>
-                <option value="Dhaka">{lang === 'bn' ? 'ঢাকা' : 'Dhaka'}</option>
-                <option value="Gazipur">{lang === 'bn' ? 'গাজীপুর' : 'Gazipur'}</option>
-                <option value="Narayanganj">{lang === 'bn' ? 'নারায়ণগঞ্জ' : 'Narayanganj'}</option>
-                <option value="Manikganj">{lang === 'bn' ? 'মানিকগঞ্জ' : 'Manikganj'}</option>
-                <option value="Munshiganj">{lang === 'bn' ? 'মুন্সীগঞ্জ' : 'Munshiganj'}</option>
-                <option value="Narsingdi">{lang === 'bn' ? 'নরসিংদী' : 'Narsingdi'}</option>
-              </optgroup>
-              <optgroup label={lang === 'bn' ? '── চট্টগ্রাম বিভাগ ──' : '── Chittagong Division ──'}>
-                <option value="Chittagong">{lang === 'bn' ? 'চট্টগ্রাম' : 'Chittagong'}</option>
-                <option value="Cox's Bazar">{lang === 'bn' ? "কক্সবাজার" : "Cox's Bazar"}</option>
-                <option value="Comilla">{lang === 'bn' ? 'কুমিল্লা' : 'Comilla'}</option>
-                <option value="Feni">{lang === 'bn' ? 'ফেনী' : 'Feni'}</option>
-                <option value="Noakhali">{lang === 'bn' ? 'নোয়াখালী' : 'Noakhali'}</option>
-              </optgroup>
-              <optgroup label={lang === 'bn' ? '── সিলেট বিভাগ ──' : '── Sylhet Division ──'}>
-                <option value="Sylhet">{lang === 'bn' ? 'সিলেট' : 'Sylhet'}</option>
-                <option value="Moulvibazar">{lang === 'bn' ? 'মৌলভীবাজার' : 'Moulvibazar'}</option>
-                <option value="Habiganj">{lang === 'bn' ? 'হবিগঞ্জ' : 'Habiganj'}</option>
-                <option value="Sunamganj">{lang === 'bn' ? 'সুনামগঞ্জ' : 'Sunamganj'}</option>
-              </optgroup>
-              <optgroup label={lang === 'bn' ? '── রাজশাহী বিভাগ ──' : '── Rajshahi Division ──'}>
-                <option value="Rajshahi">{lang === 'bn' ? 'রাজশাহী' : 'Rajshahi'}</option>
-                <option value="Bogura">{lang === 'bn' ? 'বগুড়া' : 'Bogura'}</option>
-                <option value="Pabna">{lang === 'bn' ? 'পাবনা' : 'Pabna'}</option>
-                <option value="Natore">{lang === 'bn' ? 'নাটোর' : 'Natore'}</option>
-              </optgroup>
-              <optgroup label={lang === 'bn' ? '── খুলনা বিভাগ ──' : '── Khulna Division ──'}>
-                <option value="Khulna">{lang === 'bn' ? 'খুলনা' : 'Khulna'}</option>
-                <option value="Jessore">{lang === 'bn' ? 'যশোর' : 'Jessore'}</option>
-                <option value="Barisal">{lang === 'bn' ? 'বরিশাল' : 'Barisal'}</option>
-                <option value="Satkhira">{lang === 'bn' ? 'সাতক্ষীরা' : 'Satkhira'}</option>
-              </optgroup>
-              <optgroup label={lang === 'bn' ? '── ময়মনসিংহ বিভাগ ──' : '── Mymensingh Division ──'}>
-                <option value="Mymensingh">{lang === 'bn' ? 'ময়মনসিংহ' : 'Mymensingh'}</option>
-                <option value="Jamalpur">{lang === 'bn' ? 'জামালপুর' : 'Jamalpur'}</option>
-                <option value="Netrokona">{lang === 'bn' ? 'নেত্রকোনা' : 'Netrokona'}</option>
-              </optgroup>
-              <optgroup label={lang === 'bn' ? '── রংপুর বিভাগ ──' : '── Rangpur Division ──'}>
-                <option value="Rangpur">{lang === 'bn' ? 'রংপুর' : 'Rangpur'}</option>
-                <option value="Dinajpur">{lang === 'bn' ? 'দিনাজপুর' : 'Dinajpur'}</option>
-                <option value="Kurigram">{lang === 'bn' ? 'কুড়িগ্রাম' : 'Kurigram'}</option>
-              </optgroup>
-              <optgroup label={lang === 'bn' ? '── বরিশাল বিভাগ ──' : '── Barishal Division ──'}>
-                <option value="Barishal">{lang === 'bn' ? 'বরিশাল' : 'Barishal'}</option>
-                <option value="Patuakhali">{lang === 'bn' ? 'পটুয়াখালী' : 'Patuakhali'}</option>
-                <option value="Bhola">{lang === 'bn' ? 'ভোলা' : 'Bhola'}</option>
-              </optgroup>
+              <option value="">{lang === 'bn' ? 'সব জেলা' : 'All Districts'}</option>
+              {BD_LOCATIONS.map(division => (
+                <optgroup key={division.name} label={`── ${division.name} ──`}>
+                  {division.districts.map(district => (
+                    <option key={district.name} value={district.name}>{district.name}</option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
           </div>
           <div>
