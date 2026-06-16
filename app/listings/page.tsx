@@ -4,7 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { Suspense } from 'react'
 import { ListingCard } from '@/components/ListingCard'
 import { useLang } from '@/hooks/useLang'
-import { BD_LOCATIONS } from '@/lib/bd-locations'
+import { BD_LOCATIONS, getDistricts, getUpazilas } from '@/lib/bd-locations'
 
 const CATEGORY_NAMES_BN: Record<string, string> = {
   'food-groceries': 'খাদ্য ও মুদিপণ্য',
@@ -32,7 +32,9 @@ function ListingsContent() {
   const [filters, setFilters] = useState({
     q: searchParams.get('q') || '',
     category: searchParams.get('category') || '',
+    region: searchParams.get('region') || '',
     city: searchParams.get('city') || '',
+    upazila: searchParams.get('upazila') || '',
     min_price: searchParams.get('min_price') || '',
     max_price: searchParams.get('max_price') || '',
     sort: searchParams.get('sort') || 'newest',
@@ -44,7 +46,9 @@ function ListingsContent() {
     setFilters({
       q: searchParams.get('q') || '',
       category: searchParams.get('category') || '',
+      region: searchParams.get('region') || '',
       city: searchParams.get('city') || '',
+      upazila: searchParams.get('upazila') || '',
       min_price: searchParams.get('min_price') || '',
       max_price: searchParams.get('max_price') || '',
       sort: searchParams.get('sort') || 'newest',
@@ -103,16 +107,24 @@ function ListingsContent() {
               {categories.map((c: any) => <option key={c.id} value={c.slug}>{lang === 'bn' ? (CATEGORY_NAMES_BN[c.slug] || c.name) : c.name}</option>)}
             </select>
           </div>
-          <div>
-            <h3 className="font-semibold text-gray-900 mb-2 text-sm">{lang === 'bn' ? 'জেলা' : 'District'}</h3>
-            <select className="input" value={filters.city} onChange={(e) => applyFilters({ city: e.target.value })}>
+          <div className="space-y-2">
+            <h3 className="font-semibold text-gray-900 mb-2 text-sm">{lang === 'bn' ? 'অবস্থান' : 'Location'}</h3>
+            <select className="input" value={filters.region} onChange={(e) => applyFilters({ region: e.target.value, city: '', upazila: '' })}>
+              <option value="">{lang === 'bn' ? 'সব বিভাগ' : 'All Divisions'}</option>
+              {BD_LOCATIONS.map(div => (
+                <option key={div.name} value={div.name}>{div.name}</option>
+              ))}
+            </select>
+            <select className="input" value={filters.city} onChange={(e) => applyFilters({ city: e.target.value, upazila: '' })} disabled={!filters.region}>
               <option value="">{lang === 'bn' ? 'সব জেলা' : 'All Districts'}</option>
-              {BD_LOCATIONS.map(division => (
-                <optgroup key={division.name} label={`── ${division.name} ──`}>
-                  {division.districts.map(district => (
-                    <option key={district.name} value={district.name}>{district.name}</option>
-                  ))}
-                </optgroup>
+              {filters.region && getDistricts(filters.region).map(d => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+            <select className="input" value={filters.upazila} onChange={(e) => applyFilters({ upazila: e.target.value })} disabled={!filters.city}>
+              <option value="">{lang === 'bn' ? 'সব উপজেলা' : 'All Upazilas'}</option>
+              {filters.city && getUpazilas(filters.region, filters.city).map(u => (
+                <option key={u} value={u}>{u}</option>
               ))}
             </select>
           </div>
@@ -125,7 +137,7 @@ function ListingsContent() {
                 value={filters.max_price} onChange={(e) => applyFilters({ max_price: e.target.value })} />
             </div>
           </div>
-          <button onClick={() => applyFilters({ q: '', category: '', city: '', min_price: '', max_price: '' })}
+          <button onClick={() => applyFilters({ q: '', category: '', region: '', city: '', upazila: '', min_price: '', max_price: '' })}
             className="text-sm text-gray-500 hover:text-red-500">{lang === 'bn' ? 'ফিল্টার মুছুন' : 'Clear filters'}</button>
         </aside>
 

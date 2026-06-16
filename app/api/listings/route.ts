@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get('category') || ''
     const city = searchParams.get('city') || ''
     const region = searchParams.get('region') || ''
+    const upazila = searchParams.get('upazila') || ''
     const minPrice = parseFloat(searchParams.get('min_price') || '0') || 0
     const maxPrice = parseFloat(searchParams.get('max_price') || '0') || 0
     const minDiscount = parseFloat(searchParams.get('min_discount') || '0') || 0
@@ -55,6 +56,9 @@ export async function GET(req: NextRequest) {
     }
     if (region) {
       where.region = { contains: region, mode: 'insensitive' }
+    }
+    if (upazila) {
+      where.address = { contains: upazila, mode: 'insensitive' }
     }
     if (minPrice > 0) {
       where.discountedPrice = { ...(where.discountedPrice as object), gte: minPrice }
