@@ -70,10 +70,10 @@ export function Navbar() {
       {/* Top bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Row 1: Logo + nav links */}
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-24">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
-            <Image src="/logo.png" alt="ExpiryDeals BD" width={280} height={80} className="h-16 w-auto object-contain" priority />
+            <Image src="/logo.png" alt="ExpiryDealsBD" width={360} height={100} className="h-20 w-auto object-contain" priority />
           </Link>
 
           {/* Right nav — desktop */}

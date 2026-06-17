@@ -3,14 +3,73 @@ import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
+import { useLang } from '@/hooks/useLang'
 import { nanoid } from 'nanoid'
 
-function ExpiryBadge({ days }: { days: number }) {
-  if (days < 0) return <span className="bg-gray-200 text-gray-600 px-2 py-0.5 rounded text-xs">Expired</span>
-  if (days === 0) return <span className="bg-red-500 text-white px-2 py-0.5 rounded text-xs font-bold">Expires Today!</span>
-  if (days <= 3) return <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-semibold">{days} days left</span>
-  if (days <= 7) return <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-xs">{days} days left</span>
-  return <span className="bg-orange-50 text-green-700 px-2 py-0.5 rounded text-xs">{days} days left</span>
+const T = {
+  en: {
+    home: 'Home', listings: 'Listings',
+    expired: 'This listing has expired.', browseActive: 'Browse Active Listings',
+    quantity: 'Quantity', expires: 'Expires', category: 'Category', views: 'views', posted: 'Posted',
+    description: 'Description', location: 'Location', viewOnMaps: 'View on Google Maps',
+    safetyTips: '⚠️ Safety Tips',
+    safety1: 'Meet in a safe, public place to inspect the product before buying.',
+    safety2: 'Check expiry date and packaging before purchase.',
+    safety3: 'ExpiryDealsBD does not handle payments or delivery.',
+    safety4: 'Report suspicious listings using the Report button.',
+    showPhone: '📞 Show Phone Number', loading: 'Loading...',
+    loginToContact: 'Log in', loginToContactSuffix: 'to see contact info',
+    reportAd: '🚩 Report this ad',
+    sellerInfo: 'Seller Information', seller: 'Seller', verifiedSeller: 'Verified Seller',
+    memberSince: 'Member since',
+    adDetails: 'Ad Details', adId: 'Ad ID', adPosted: 'Posted', adExpiry: 'Expiry', adViews: 'Views', adLocation: 'Location',
+    buyerReviews: 'Buyer Reviews', leaveReview: 'Leave a Review',
+    reviewSubmitted: '✅ Review submitted! Thank you.',
+    reviewPlaceholder: 'Share your experience with this seller... (optional)',
+    submitReview: 'Submit Review', submitting: 'Submitting...',
+    noReviews: 'No reviews yet.',
+    reportTitle: '🚩 Report this Listing', reportReason: 'Reason', reportNote: 'Additional note (optional)',
+    reportNotePlaceholder: 'Tell us more...', reportSubmit: 'Submit Report', reportCancel: 'Cancel',
+    reportSent: '✅ Report submitted. Thank you.',
+    reasonSpam: 'Spam', reasonWrongInfo: 'Wrong information', reasonIllegal: 'Illegal item', reasonOther: 'Other',
+    daysLeft: (d: number) => `${d} days left`,
+  },
+  bn: {
+    home: 'হোম', listings: 'বিজ্ঞাপন',
+    expired: 'এই বিজ্ঞাপনের মেয়াদ শেষ হয়ে গেছে।', browseActive: 'সক্রিয় বিজ্ঞাপন দেখুন',
+    quantity: 'পরিমাণ', expires: 'মেয়াদ', category: 'ক্যাটাগরি', views: 'ভিউ', posted: 'পোস্ট',
+    description: 'বিবরণ', location: 'অবস্থান', viewOnMaps: 'গুগল ম্যাপে দেখুন',
+    safetyTips: '⚠️ নিরাপত্তা টিপস',
+    safety1: 'পণ্য কেনার আগে নিরাপদ, পাবলিক জায়গায় পরীক্ষা করুন।',
+    safety2: 'কেনার আগে মেয়াদ এবং প্যাকেজিং যাচাই করুন।',
+    safety3: 'ExpiryDealsBD কোনো পেমেন্ট বা ডেলিভারি পরিচালনা করে না।',
+    safety4: 'সন্দেহজনক বিজ্ঞাপন রিপোর্ট বাটন দিয়ে জানান।',
+    showPhone: '📞 ফোন নম্বর দেখুন', loading: 'লোড হচ্ছে...',
+    loginToContact: 'লগ ইন করুন', loginToContactSuffix: 'যোগাযোগের তথ্য দেখতে',
+    reportAd: '🚩 রিপোর্ট করুন',
+    sellerInfo: 'বিক্রেতার তথ্য', seller: 'বিক্রেতা', verifiedSeller: 'যাচাইকৃত বিক্রেতা',
+    memberSince: 'সদস্য হয়েছেন',
+    adDetails: 'বিজ্ঞাপনের বিবরণ', adId: 'বিজ্ঞাপন আইডি', adPosted: 'পোস্ট', adExpiry: 'মেয়াদ', adViews: 'ভিউ', adLocation: 'অবস্থান',
+    buyerReviews: 'ক্রেতার রিভিউ', leaveReview: 'রিভিউ দিন',
+    reviewSubmitted: '✅ রিভিউ জমা হয়েছে। ধন্যবাদ।',
+    reviewPlaceholder: 'বিক্রেতার সাথে আপনার অভিজ্ঞতা শেয়ার করুন... (ঐচ্ছিক)',
+    submitReview: 'রিভিউ জমা দিন', submitting: 'জমা হচ্ছে...',
+    noReviews: 'এখনো কোনো রিভিউ নেই।',
+    reportTitle: '🚩 বিজ্ঞাপন রিপোর্ট করুন', reportReason: 'কারণ', reportNote: 'অতিরিক্ত নোট (ঐচ্ছিক)',
+    reportNotePlaceholder: 'আরো বিস্তারিত লিখুন...', reportSubmit: 'রিপোর্ট জমা দিন', reportCancel: 'বাতিল',
+    reportSent: '✅ রিপোর্ট জমা হয়েছে। ধন্যবাদ।',
+    reasonSpam: 'স্প্যাম', reasonWrongInfo: 'ভুল তথ্য', reasonIllegal: 'অবৈধ পণ্য', reasonOther: 'অন্যান্য',
+    daysLeft: (d: number) => `${d} দিন বাকি`,
+  },
+}
+
+function ExpiryBadge({ days, lang }: { days: number; lang: 'en' | 'bn' }) {
+  const t = T[lang]
+  if (days < 0) return <span className="bg-gray-200 text-gray-600 px-2 py-0.5 rounded text-xs">{lang === 'bn' ? 'মেয়াদোত্তীর্ণ' : 'Expired'}</span>
+  if (days === 0) return <span className="bg-red-500 text-white px-2 py-0.5 rounded text-xs font-bold">{lang === 'bn' ? 'আজই শেষ!' : 'Expires Today!'}</span>
+  if (days <= 3) return <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-semibold">{t.daysLeft(days)}</span>
+  if (days <= 7) return <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-xs">{t.daysLeft(days)}</span>
+  return <span className="bg-orange-50 text-green-700 px-2 py-0.5 rounded text-xs">{t.daysLeft(days)}</span>
 }
 
 function formatDate(d: string) {
@@ -20,6 +79,8 @@ function formatDate(d: string) {
 export default function ListingDetailPage() {
   const { slug } = useParams() as { slug: string }
   const { user, token } = useAuth()
+  const { lang } = useLang()
+  const t = T[lang]
   const [listing, setListing] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [activePhoto, setActivePhoto] = useState(0)
@@ -122,8 +183,8 @@ export default function ListingDetailPage() {
     <div className="max-w-xl mx-auto px-4 py-20 text-center">
       <p className="text-5xl mb-4">⏰</p>
       <h1 className="text-2xl font-bold mb-2">{listing.title}</h1>
-      <p className="text-gray-600 mb-6">This listing has expired.</p>
-      <Link href="/listings" className="btn-primary">Browse Active Listings</Link>
+      <p className="text-gray-600 mb-6">{t.expired}</p>
+      <Link href="/listings" className="btn-primary">{t.browseActive}</Link>
     </div>
   )
 
@@ -134,9 +195,9 @@ export default function ListingDetailPage() {
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="bg-white border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-4 py-2 text-xs text-gray-500 flex items-center gap-1.5">
-          <Link href="/" className="hover:text-orange-600">Home</Link>
+          <Link href="/" className="hover:text-orange-600">{t.home}</Link>
           <span>/</span>
-          <Link href="/listings" className="hover:text-orange-600">Listings</Link>
+          <Link href="/listings" className="hover:text-orange-600">{t.listings}</Link>
           <span>/</span>
           <Link href={`/listings?category=${listing.category?.slug}`} className="hover:text-orange-600">{listing.category?.name}</Link>
           <span>/</span>
@@ -194,43 +255,43 @@ export default function ListingDetailPage() {
               <div className="flex items-baseline gap-3 mb-3">
                 <span className="text-2xl font-bold text-orange-600">৳ {parseFloat(listing.discountedPrice).toLocaleString('en-BD')}</span>
                 <span className="text-base text-gray-400 line-through">৳ {parseFloat(listing.originalPrice).toLocaleString('en-BD')}</span>
-                <ExpiryBadge days={listing.days_remaining} />
+                <ExpiryBadge days={listing.days_remaining} lang={lang} />
               </div>
 
               {/* Key details row — Bikroy style */}
               <div className="grid grid-cols-2 gap-2 text-sm border-t border-gray-100 pt-3">
                 <div className="flex items-center gap-2 text-gray-600">
                   <span className="text-gray-400">📦</span>
-                  <span>Quantity: <strong>{listing.quantity}</strong></span>
+                  <span>{t.quantity}: <strong>{listing.quantity}</strong></span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-600">
                   <span className="text-gray-400">📅</span>
-                  <span>Expires: <strong>{formatDate(listing.expiryDate)}</strong></span>
+                  <span>{t.expires}: <strong>{formatDate(listing.expiryDate)}</strong></span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-600">
                   <span className="text-gray-400">🏷️</span>
-                  <span>Category: <strong>{listing.category?.name}</strong></span>
+                  <span>{t.category}: <strong>{listing.category?.name}</strong></span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-600">
                   <span className="text-gray-400">👁</span>
-                  <span>{listing.viewCount} views</span>
+                  <span>{listing.viewCount} {t.views}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-600 col-span-2">
                   <span className="text-gray-400">🕐</span>
-                  <span>Posted: <strong>{formatDate(listing.createdAt)}</strong></span>
+                  <span>{t.posted}: <strong>{formatDate(listing.createdAt)}</strong></span>
                 </div>
               </div>
             </div>
 
             {/* Description */}
             <div className="bg-white rounded shadow-sm border border-gray-200 p-4">
-              <h2 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide">Description</h2>
+              <h2 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide">{t.description}</h2>
               <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{listing.description}</p>
             </div>
 
             {/* Location — Bikroy style */}
             <div className="bg-white rounded shadow-sm border border-gray-200 p-4">
-              <h2 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide">Location</h2>
+              <h2 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide">{t.location}</h2>
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-orange-600 text-lg">📍</span>
@@ -249,7 +310,7 @@ export default function ListingDetailPage() {
               >
                 <span className="text-xl">🗺️</span>
                 <div>
-                  <p className="font-semibold">View on Google Maps</p>
+                  <p className="font-semibold">{t.viewOnMaps}</p>
                   <p className="text-xs text-orange-500 truncate">{fullLocation}, Bangladesh</p>
                 </div>
                 <span className="ml-auto text-orange-400">→</span>
@@ -258,12 +319,12 @@ export default function ListingDetailPage() {
 
             {/* Safety tips */}
             <div className="bg-yellow-50 border border-yellow-200 rounded p-4 text-xs text-yellow-800">
-              <p className="font-semibold mb-1">⚠️ Safety Tips</p>
+              <p className="font-semibold mb-1">{t.safetyTips}</p>
               <ul className="space-y-0.5 list-disc list-inside">
-                <li>Meet in a safe, public place to inspect the product before buying.</li>
-                <li>Check expiry date and packaging before purchase.</li>
-                <li>ExpiryDeals does not handle payments or delivery.</li>
-                <li>Report suspicious listings using the Report button.</li>
+                <li>{t.safety1}</li>
+                <li>{t.safety2}</li>
+                <li>{t.safety3}</li>
+                <li>{t.safety4}</li>
               </ul>
             </div>
           </div>
@@ -276,7 +337,7 @@ export default function ListingDetailPage() {
               {!contact ? (
                 <button onClick={handleContact} disabled={contactLoading}
                   className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded text-base transition">
-                  {contactLoading ? 'Loading...' : '📞 Show Phone Number'}
+                  {contactLoading ? t.loading : t.showPhone}
                 </button>
               ) : (
                 <div className="space-y-2">
@@ -295,32 +356,32 @@ export default function ListingDetailPage() {
               )}
               {!user && (
                 <p className="text-xs text-center text-gray-400">
-                  <Link href="/login" className="text-orange-600 hover:underline">Log in</Link> to see contact info
+                  <Link href="/login" className="text-orange-600 hover:underline">{t.loginToContact}</Link> {t.loginToContactSuffix}
                 </p>
               )}
               <button onClick={() => setReportOpen(true)} className="w-full text-xs text-gray-400 hover:text-red-500 py-1 flex items-center justify-center gap-1">
-                🚩 Report this ad
+                {t.reportAd}
               </button>
             </div>
 
             {/* Seller card — Bikroy style */}
             <div className="bg-white rounded shadow-sm border border-gray-200 p-4">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Seller Information</h3>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">{t.sellerInfo}</h3>
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center text-xl font-bold text-orange-600">
                   {(listing.seller?.business_name || listing.seller?.full_name || 'S')[0].toUpperCase()}
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <p className="font-semibold text-gray-900 text-sm">{listing.seller?.business_name || listing.seller?.full_name || 'Seller'}</p>
+                    <p className="font-semibold text-gray-900 text-sm">{listing.seller?.business_name || listing.seller?.full_name || t.seller}</p>
                     {listing.seller?.is_verified_seller && (
-                      <span title="Verified Seller" className="text-orange-500 text-sm">✓</span>
+                      <span title={t.verifiedSeller} className="text-orange-500 text-sm">✓</span>
                     )}
                   </div>
                   {listing.seller?.is_verified_seller && (
-                    <span className="text-xs bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded font-medium">Verified Seller</span>
+                    <span className="text-xs bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded font-medium">{t.verifiedSeller}</span>
                   )}
-                  <p className="text-xs text-gray-500">Member since {new Date(listing.seller?.member_since).getFullYear()}</p>
+                  <p className="text-xs text-gray-500">{t.memberSince} {new Date(listing.seller?.member_since).getFullYear()}</p>
                 </div>
               </div>
               <div className="space-y-1.5 text-xs text-gray-600 border-t border-gray-100 pt-3">
@@ -333,13 +394,13 @@ export default function ListingDetailPage() {
 
             {/* Ad details sidebar */}
             <div className="bg-white rounded shadow-sm border border-gray-200 p-4">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Ad Details</h3>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">{t.adDetails}</h3>
               <table className="w-full text-xs text-gray-600">
                 <tbody className="divide-y divide-gray-100">
-                  <tr><td className="py-1.5 text-gray-400">Ad ID</td><td className="py-1.5 font-mono text-right">{listing.id?.slice(0, 8).toUpperCase()}</td></tr>
-                  <tr><td className="py-1.5 text-gray-400">Posted</td><td className="py-1.5 text-right">{formatDate(listing.createdAt)}</td></tr>
-                  <tr><td className="py-1.5 text-gray-400">Expiry</td><td className="py-1.5 text-right">{formatDate(listing.expiryDate)}</td></tr>
-                  <tr><td className="py-1.5 text-gray-400">Views</td><td className="py-1.5 text-right">{listing.viewCount}</td></tr>
+                  <tr><td className="py-1.5 text-gray-400">{t.adId}</td><td className="py-1.5 font-mono text-right">{listing.id?.slice(0, 8).toUpperCase()}</td></tr>
+                  <tr><td className="py-1.5 text-gray-400">{t.adPosted}</td><td className="py-1.5 text-right">{formatDate(listing.createdAt)}</td></tr>
+                  <tr><td className="py-1.5 text-gray-400">{t.adExpiry}</td><td className="py-1.5 text-right">{formatDate(listing.expiryDate)}</td></tr>
+                  <tr><td className="py-1.5 text-gray-400">{t.adViews}</td><td className="py-1.5 text-right">{listing.viewCount}</td></tr>
                   <tr>
                     <td className="py-1.5 text-gray-400">Location</td>
                     <td className="py-1.5 text-right">
@@ -364,7 +425,7 @@ export default function ListingDetailPage() {
       {/* Reviews section */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 border-t border-gray-100">
         <div className="flex items-center gap-3 mb-6">
-          <h2 className="text-lg font-bold text-gray-900">Buyer Reviews</h2>
+          <h2 className="text-lg font-bold text-gray-900">{t.buyerReviews}</h2>
           {reviewAvg && (
             <div className="flex items-center gap-1">
               <span className="text-orange-500 font-bold">{reviewAvg}</span>
@@ -377,9 +438,9 @@ export default function ListingDetailPage() {
         {/* Review form — only for logged-in non-sellers */}
         {user && listing && user.id !== listing.seller?.id && (
           <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 mb-6">
-            <h3 className="font-semibold text-gray-900 mb-3 text-sm">Leave a Review</h3>
+            <h3 className="font-semibold text-gray-900 mb-3 text-sm">{t.leaveReview}</h3>
             {reviewSuccess ? (
-              <p className="text-green-600 text-sm font-medium">✅ Review submitted! Thank you.</p>
+              <p className="text-green-600 text-sm font-medium">{t.reviewSubmitted}</p>
             ) : (
               <div className="space-y-3">
                 <div className="flex items-center gap-1">
@@ -392,7 +453,7 @@ export default function ListingDetailPage() {
                 <textarea
                   className="input resize-none text-sm"
                   rows={3}
-                  placeholder="Share your experience with this seller... (optional)"
+                  placeholder={t.reviewPlaceholder}
                   value={reviewComment}
                   onChange={e => setReviewComment(e.target.value)}
                 />
@@ -409,13 +470,13 @@ export default function ListingDetailPage() {
                     })
                     const data = await res.json()
                     setReviewSaving(false)
-                    if (!res.ok) setReviewError(data.error?.message || 'Failed to submit review')
+                    if (!res.ok) setReviewError(data.error?.message || (lang === 'bn' ? 'রিভিউ জমা ব্যর্থ হয়েছে' : 'Failed to submit review'))
                     else setReviewSuccess(true)
                   }}
                   disabled={reviewSaving}
                   className="btn-primary text-sm py-1.5"
                 >
-                  {reviewSaving ? 'Submitting...' : 'Submit Review'}
+                  {reviewSaving ? t.submitting : t.submitReview}
                 </button>
               </div>
             )}
@@ -424,7 +485,7 @@ export default function ListingDetailPage() {
 
         {/* Reviews list */}
         {reviews.length === 0 ? (
-          <p className="text-gray-400 text-sm">No reviews yet.</p>
+          <p className="text-gray-400 text-sm">{t.noReviews}</p>
         ) : (
           <div className="space-y-4">
             {reviews.map(r => (
@@ -448,22 +509,22 @@ export default function ListingDetailPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           role="dialog" aria-modal="true" aria-labelledby="report-dialog-title">
           <div className="bg-white rounded-xl p-6 w-full max-w-sm space-y-4">
-            <h3 id="report-dialog-title" className="font-bold text-lg">Report Listing</h3>
+            <h3 id="report-dialog-title" className="font-bold text-lg">{t.reportTitle}</h3>
             {reportSent ? (
-              <p className="text-orange-600">✅ Report submitted. Thank you.</p>
+              <p className="text-orange-600">{t.reportSent}</p>
             ) : (
               <>
                 <select className="input" value={reportReason} onChange={(e) => setReportReason(e.target.value)}>
-                  <option value="spam">Spam</option>
-                  <option value="wrong_info">Wrong information</option>
-                  <option value="illegal_item">Illegal item</option>
-                  <option value="other">Other</option>
+                  <option value="spam">{t.reasonSpam}</option>
+                  <option value="wrong_info">{t.reasonWrongInfo}</option>
+                  <option value="illegal_item">{t.reasonIllegal}</option>
+                  <option value="other">{t.reasonOther}</option>
                 </select>
-                <textarea className="input resize-none" rows={3} placeholder="Optional note..."
+                <textarea className="input resize-none" rows={3} placeholder={t.reportNotePlaceholder}
                   value={reportNote} onChange={(e) => setReportNote(e.target.value)} />
                 <div className="flex gap-2">
-                  <button onClick={submitReport} className="btn-danger flex-1">Submit</button>
-                  <button onClick={() => setReportOpen(false)} className="btn-secondary flex-1">Cancel</button>
+                  <button onClick={submitReport} className="btn-danger flex-1">{t.reportSubmit}</button>
+                  <button onClick={() => setReportOpen(false)} className="btn-secondary flex-1">{t.reportCancel}</button>
                 </div>
               </>
             )}

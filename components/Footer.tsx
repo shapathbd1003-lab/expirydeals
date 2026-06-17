@@ -15,8 +15,8 @@ const T = {
     legal: 'Legal',
     terms: 'Terms of Service',
     privacy: 'Privacy Policy',
-    copyright: 'ExpiryDeals Bangladesh. All rights reserved.',
-    disclaimer: 'ExpiryDeals does not handle payments or deliveries. Always inspect products before purchasing.',
+    copyright: 'ExpiryDealsBD. All rights reserved.',
+    disclaimer: 'ExpiryDealsBD does not handle payments or deliveries. Always inspect products before purchasing.',
   },
   bn: {
     tagline: 'বাংলাদেশের মেয়াদোত্তীর্ণ পণ্যের মার্কেটপ্লেস — বড় ছাড়ে কিনুন।',
@@ -44,7 +44,7 @@ export function Footer() {
       <div className="max-w-6xl mx-auto px-4 py-8 sm:py-10">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-8">
           <div className="col-span-2 sm:col-span-1">
-            <p className="text-white font-bold text-base mb-1">ExpiryDeals</p>
+            <p className="text-white font-bold text-base mb-1">ExpiryDealsBD</p>
             <p className="text-xs text-gray-500 leading-relaxed">{t.tagline}</p>
           </div>
           <div>

@@ -9,12 +9,12 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://expirydeals.com'
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
-  title: { default: 'ExpiryDeals — Save on Near-Expiry Products in Bangladesh', template: '%s | ExpiryDeals BD' },
+  title: { default: 'ExpiryDealsBD — Save on Near-Expiry Products in Bangladesh', template: '%s | ExpiryDealsBD' },
   description: 'Find massive discounts on near-expiry food, groceries, health products and more from local sellers across Bangladesh.',
   keywords: ['near expiry products bangladesh', 'discount food dhaka', 'expiry deals bd', 'near expiry groceries'],
   openGraph: {
     type: 'website',
-    siteName: 'ExpiryDeals',
+    siteName: 'ExpiryDealsBD',
     locale: 'en_BD',
     url: BASE_URL,
   },
