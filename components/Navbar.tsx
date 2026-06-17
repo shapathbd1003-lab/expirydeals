@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useLang } from '@/hooks/useLang'
@@ -70,11 +71,8 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4 h-16">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0 flex items-center gap-1.5">
-            <span className="text-2xl font-black tracking-tight">
-              <span className="text-orange-500">Expiry</span><span className="text-gray-800">Deals</span>
-              <span className="text-xs font-medium text-gray-400 ml-1">BD</span>
-            </span>
+          <Link href="/" className="flex-shrink-0">
+            <Image src="/logo.png" alt="ExpiryDeals BD" width={160} height={48} className="h-12 w-auto object-contain" priority />
           </Link>
 
           {/* Search bar */}
