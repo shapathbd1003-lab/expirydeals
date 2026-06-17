@@ -69,31 +69,15 @@ export function Navbar() {
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
       {/* Top bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-4 h-14 md:h-16">
+        {/* Row 1: Logo + nav links */}
+        <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
-            <Image src="/logo.png" alt="ExpiryDeals BD" width={180} height={48} className="h-8 md:h-10 w-auto object-contain" priority />
+            <Image src="/logo.png" alt="ExpiryDeals BD" width={280} height={80} className="h-16 w-auto object-contain" priority />
           </Link>
 
-          {/* Search bar */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-2xl">
-            <div className="flex w-full border border-gray-300 rounded-lg overflow-hidden focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
-              <input
-                type="text"
-                value={q}
-                onChange={e => setQ(e.target.value)}
-                placeholder={t.search}
-                aria-label={t.search}
-                className="flex-1 px-4 py-2.5 text-sm outline-none bg-white"
-              />
-              <button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white px-5 text-sm font-semibold flex-shrink-0 transition-colors">
-                {t.searchBtn}
-              </button>
-            </div>
-          </form>
-
-          {/* Right nav */}
-          <div className="hidden md:flex items-center gap-3 ml-auto flex-shrink-0">
+          {/* Right nav — desktop */}
+          <div className="hidden md:flex items-center gap-3 flex-shrink-0">
             {/* Language toggle */}
             <button
               onClick={() => setLang(lang === 'en' ? 'bn' : 'en')}
@@ -129,10 +113,27 @@ export function Navbar() {
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
-            className="md:hidden ml-auto p-2 text-gray-600"
+            className="md:hidden p-2 text-gray-600"
           >
             {menuOpen ? '✕' : '☰'}
           </button>
+        </div>
+
+        {/* Row 2: Search bar — desktop only */}
+        <div className="hidden md:block pb-3">
+          <form onSubmit={handleSearch} className="flex w-full border border-gray-300 rounded-lg overflow-hidden focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
+            <input
+              type="text"
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              placeholder={t.search}
+              aria-label={t.search}
+              className="flex-1 px-4 py-2.5 text-sm outline-none bg-white"
+            />
+            <button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white px-6 text-sm font-semibold flex-shrink-0 transition-colors">
+              {t.searchBtn}
+            </button>
+          </form>
         </div>
       </div>
 
