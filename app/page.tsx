@@ -39,7 +39,7 @@ const T = {
     badge: "Bangladesh's #1 Near-Expiry Marketplace",
     hero: 'Big Discounts on Near-Expiry Products',
     heroSub: 'Save up to',
-    heroSub2: 'off on food, groceries, cosmetics & more. Help reduce waste while saving money.',
+    heroSub2: 'on food, groceries, cosmetics & more. Help reduce waste while saving money.',
     searchPlaceholder: 'Search products, brands...',
     allCategories: 'All Categories',
     search: 'Search',

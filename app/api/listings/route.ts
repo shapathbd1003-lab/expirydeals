@@ -83,6 +83,8 @@ export async function GET(req: NextRequest) {
         ? { discountedPrice: 'desc' }
         : sort === 'expiry_asc'
         ? { expiryDate: 'asc' }
+        : sort === 'expiry_desc'
+        ? { expiryDate: 'desc' }
         : sort === 'discount_desc'
         ? { discountPct: 'desc' }
         : { createdAt: 'desc' }

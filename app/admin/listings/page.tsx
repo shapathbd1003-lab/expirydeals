@@ -76,15 +76,15 @@ function AdminListingsContent() {
         </select>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-x-auto">
+        <table className="w-full text-sm min-w-[700px]">
           <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
-              <th className="text-left px-4 py-3 text-gray-600 font-medium">Listing</th>
-              <th className="text-left px-4 py-3 text-gray-600 font-medium">Seller</th>
-              <th className="text-left px-4 py-3 text-gray-600 font-medium">Price</th>
-              <th className="text-left px-4 py-3 text-gray-600 font-medium">Status</th>
-              <th className="text-left px-4 py-3 text-gray-600 font-medium">Actions</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium w-[35%]">Listing</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium w-[20%]">Seller</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium w-[15%]">Price</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium w-[12%]">Status</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium w-[18%]">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">

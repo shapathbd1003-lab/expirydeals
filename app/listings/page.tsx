@@ -150,6 +150,7 @@ function ListingsContent() {
             <select className="input w-auto text-sm" value={filters.sort} onChange={(e) => applyFilters({ sort: e.target.value })}>
               <option value="newest">{lang === 'bn' ? 'সবচেয়ে নতুন' : 'Newest first'}</option>
               <option value="expiry_asc">{lang === 'bn' ? 'শীঘ্রই মেয়াদোত্তীর্ণ' : 'Expiring soonest'}</option>
+              <option value="expiry_desc">{lang === 'bn' ? 'সর্বোচ্চ মেয়াদ' : 'Expiring latest'}</option>
               <option value="discount_desc">{lang === 'bn' ? 'সর্বোচ্চ ছাড়' : 'Biggest discount'}</option>
               <option value="price_asc">{lang === 'bn' ? 'মূল্য: কম থেকে বেশি' : 'Price: low to high'}</option>
               <option value="price_desc">{lang === 'bn' ? 'মূল্য: বেশি থেকে কম' : 'Price: high to low'}</option>
