@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useLang } from '@/hooks/useLang'
 import { nanoid } from 'nanoid'
+import ImageZoom from '@/components/ImageZoom'
 
 const T = {
   en: {
@@ -215,8 +216,10 @@ export default function ListingDetailPage() {
             <div className="bg-white rounded shadow-sm border border-gray-200 overflow-hidden">
               <div className="relative aspect-[4/3] bg-gray-100">
                 {listing.photos?.length > 0 ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={listing.photos[activePhoto]?.urlMedium} alt={listing.title} className="object-cover w-full h-full" />
+                  <ImageZoom
+                    src={listing.photos[activePhoto]?.urlMedium}
+                    alt={listing.title}
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-7xl text-gray-200">📦</div>
                 )}
