@@ -49,7 +49,7 @@ export default function ImageZoom({ src, alt, zoomFactor = 2.5, lensSize = 180 }
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full cursor-crosshair select-none"
+      className="absolute inset-0 cursor-crosshair select-none"
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setHover(null)}
     >
