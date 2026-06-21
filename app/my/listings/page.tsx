@@ -148,6 +148,16 @@ function MyListingsContent() {
   }
 
 
+  const submitForReview = async (id: string) => {
+    await fetch(`/api/seller/listings/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      credentials: 'include',
+      body: JSON.stringify({ status: 'pending' }),
+    })
+    setListings(ls => ls.filter(l => l.id !== id))
+  }
+
   const deletePermanent = async (id: string) => {
     if (!confirm('Permanently remove this listing from the database? This cannot be undone.')) return
     await fetch(`/api/seller/listings/${id}`, {
@@ -230,6 +240,12 @@ function MyListingsContent() {
                 </div>
                 <div className="flex gap-2 mt-2 flex-wrap">
                   <Link href={`/seller/listings/${l.id}/edit`} className="text-xs btn-secondary py-1 px-2">Edit</Link>
+                  {tab === 'draft' && (
+                    <button onClick={() => submitForReview(l.id)}
+                      className="text-xs bg-orange-500 hover:bg-orange-600 text-white font-semibold py-1 px-3 rounded-lg transition">
+                      📋 Submit for Review
+                    </button>
+                  )}
                   {tab === 'pending' && (
                     <span className="text-xs text-blue-600 font-medium py-1 px-2 bg-blue-50 rounded-lg">⏳ Awaiting admin approval</span>
                   )}
