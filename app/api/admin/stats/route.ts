@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
       prisma.listing.count({ where: { createdAt: { gte: weekAgo } } }),
       prisma.listingContact.count({ where: { contactedAt: { gte: weekAgo } } }),
       prisma.report.count({ where: { status: 'open' } }),
-      prisma.listing.count({ where: { status: 'draft' } }),
+      prisma.listing.count({ where: { status: 'pending' } }),
     ])
 
     return ok({

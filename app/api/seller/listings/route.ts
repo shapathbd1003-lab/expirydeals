@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const perPage = Math.min(48, parseInt(searchParams.get('per_page') || '24'))
 
     const where: Prisma.ListingWhereInput = { sellerId: auth.user.userId }
-    if (status && ['draft', 'active', 'paused', 'expired', 'deleted'].includes(status)) {
+    if (status && ['draft', 'pending', 'active', 'paused', 'expired', 'deleted'].includes(status)) {
       where.status = status as any
     }
 
@@ -78,8 +78,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const {
       title, category_id, description, original_price, discounted_price,
-      quantity, expiry_date, city, region, address, status,
+      quantity, expiry_date, city, region, address, status: rawStatus,
     } = body
+    const status = rawStatus === 'pending' ? 'pending' : 'draft'
 
     if (!title || !category_id || !description || !original_price || !discounted_price || !quantity || !expiry_date || !city) {
       return validationError('title, category_id, description, original_price, discounted_price, quantity, expiry_date, and city are required')
@@ -122,7 +123,7 @@ export async function POST(req: NextRequest) {
         city: city.trim(),
         region: region?.trim() || null,
         address: address?.trim() || null,
-        status: 'draft',
+        status,
       },
       include: {
         category: { select: { id: true, name: true, slug: true } },

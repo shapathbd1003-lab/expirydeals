@@ -8,6 +8,7 @@ import Link from 'next/link'
 const STATUS_COLORS: Record<string, string> = {
   active: 'bg-green-100 text-green-700',
   draft: 'bg-yellow-100 text-yellow-800',
+  pending: 'bg-blue-100 text-blue-700',
   paused: 'bg-orange-100 text-orange-700',
   expired: 'bg-gray-100 text-gray-500',
   deleted: 'bg-red-100 text-red-500',
@@ -70,8 +71,8 @@ function AdminListingsContent() {
           value={q} onChange={e => { setQ(e.target.value); setPage(1) }} />
         <select className="input w-auto" value={status} onChange={e => { setStatus(e.target.value); setPage(1) }}>
           <option value="">All statuses</option>
-          {['draft', 'active', 'paused', 'expired', 'deleted'].map(s => (
-            <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+          {['pending', 'draft', 'active', 'paused', 'expired', 'deleted'].map(s => (
+            <option key={s} value={s}>{s === 'pending' ? 'Pending Approval' : s.charAt(0).toUpperCase() + s.slice(1)}</option>
           ))}
         </select>
       </div>
@@ -121,7 +122,7 @@ function AdminListingsContent() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2 flex-wrap">
-                      {l.status === 'draft' && (
+                      {l.status === 'pending' && (
                         <button onClick={() => doAction(l.id, 'approve')}
                           className="text-xs bg-orange-500 hover:bg-orange-600 text-white font-semibold px-2.5 py-1 rounded-lg transition">
                           ✅ Approve

@@ -63,7 +63,7 @@ export default function NewListingPage() {
           city: location.district,
           region: location.division,
           address: [location.upazila, location.address].filter(Boolean).join(', '),
-          status: 'draft',
+          status: publish ? 'pending' : 'draft',
         }),
       })
       const data = await res.json()
@@ -92,7 +92,7 @@ export default function NewListingPage() {
         })
       }
 
-      router.push('/my/listings?submitted=1')
+      router.push(publish ? '/my/listings?submitted=1' : '/my/listings?tab=draft')
     } catch {
       setError('Network error — please check your connection and try again.')
     } finally {

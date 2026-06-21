@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 
-const STATUS_TABS = ['active', 'draft', 'paused', 'expired', 'deleted'] as const
+const STATUS_TABS = ['active', 'pending', 'draft', 'paused', 'expired', 'deleted'] as const
 
 function daysLeft(expiryDate: string) {
   const diff = Math.ceil((new Date(expiryDate).getTime() - Date.now()) / 86400000)
@@ -111,7 +111,8 @@ function MyListingsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const submitted = searchParams.get('submitted') === '1'
-  const [tab, setTab] = useState<typeof STATUS_TABS[number]>(submitted ? 'draft' : 'active')
+  const searchParamTab = searchParams.get('tab') as typeof STATUS_TABS[number] | null
+  const [tab, setTab] = useState<typeof STATUS_TABS[number]>(submitted ? 'pending' : (searchParamTab && STATUS_TABS.includes(searchParamTab as any) ? searchParamTab : 'active'))
   const [listings, setListings] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [actionModal, setActionModal] = useState<{ listing: any; mode: 'sold' | 'delete' } | null>(null)
@@ -182,7 +183,7 @@ function MyListingsContent() {
             className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition ${
               tab === s ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
             }`}>
-            {s === 'draft' ? 'Drafts' : s.charAt(0).toUpperCase() + s.slice(1)}
+            {s === 'draft' ? 'Drafts' : s === 'pending' ? 'Pending Approval' : s.charAt(0).toUpperCase() + s.slice(1)}
           </button>
         ))}
       </div>
@@ -194,7 +195,7 @@ function MyListingsContent() {
       ) : listings.length === 0 ? (
         <div className="text-center py-16 text-gray-500">
           <p className="text-4xl mb-3">📦</p>
-          <p className="mb-4">No {tab === 'draft' ? 'saved drafts' : tab + ' ads'}.</p>
+          <p className="mb-4">No {tab === 'draft' ? 'saved drafts' : tab === 'pending' ? 'listings pending approval' : tab + ' ads'}.</p>
           {tab === 'active' && <Link href="/seller/listings/new" className="btn-primary">Post your first ad</Link>}
           {tab === 'draft' && <Link href="/seller/listings/new" className="btn-primary">Create a new listing</Link>}
         </div>
@@ -222,12 +223,15 @@ function MyListingsContent() {
                     {tab === 'draft' && (
                       <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs font-medium">Draft</span>
                     )}
+                    {tab === 'pending' && (
+                      <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-medium">Pending Approval</span>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-2 mt-2 flex-wrap">
                   <Link href={`/seller/listings/${l.id}/edit`} className="text-xs btn-secondary py-1 px-2">Edit</Link>
-                  {tab === 'draft' && (
-                    <span className="text-xs text-orange-600 font-medium py-1 px-2 bg-orange-50 rounded-lg">⏳ Pending admin approval</span>
+                  {tab === 'pending' && (
+                    <span className="text-xs text-blue-600 font-medium py-1 px-2 bg-blue-50 rounded-lg">⏳ Awaiting admin approval</span>
                   )}
                   {(tab === 'active' || tab === 'paused') && (
                     <>

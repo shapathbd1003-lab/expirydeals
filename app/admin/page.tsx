@@ -30,7 +30,7 @@ export default function AdminDashboard() {
           {[
             { label: 'Total Users', value: stats.total_users, icon: '👥', href: '/admin/users' },
             { label: 'Active Listings', value: stats.total_active_listings, icon: '📦', href: '/admin/listings' },
-            { label: 'Pending Approval', value: stats.pending_approval, icon: '🕐', warn: stats.pending_approval > 0, href: '/admin/listings?status=draft' },
+            { label: 'Pending Approval', value: stats.pending_approval, icon: '🕐', warn: stats.pending_approval > 0, href: '/admin/listings?status=pending' },
             { label: 'Open Reports', value: stats.open_reports, icon: '🚩', warn: stats.open_reports > 0, href: '/admin/reports' },
           ].map((s) => (
             <Link key={s.label} href={s.href}
@@ -47,7 +47,7 @@ export default function AdminDashboard() {
       <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { href: '/admin/users', icon: '👥', title: 'Manage Users', desc: 'View, suspend, delete users' },
-          { href: '/admin/listings?status=draft', icon: '🕐', title: 'Approve Listings', desc: `${stats?.pending_approval || 0} pending approval` },
+          { href: '/admin/listings?status=pending', icon: '🕐', title: 'Approve Listings', desc: `${stats?.pending_approval || 0} pending approval` },
           { href: '/admin/listings', icon: '📦', title: 'All Listings', desc: 'Review and moderate listings' },
           { href: '/admin/reports', icon: '🚩', title: 'Reports Queue', desc: `${stats?.open_reports || 0} open reports` },
           { href: '/admin/categories', icon: '🏷️', title: 'Categories', desc: 'Add, rename, disable categories' },

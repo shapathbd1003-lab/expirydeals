@@ -15,7 +15,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (!existing) return notFound('Listing not found')
 
     if (action === 'approve') {
-      if (existing.status !== 'draft') return validationError('Only draft listings can be approved')
+      if (existing.status !== 'pending') return validationError('Only pending listings can be approved')
       const listing = await prisma.listing.update({
         where: { id: params.id },
         data: { status: 'active' },

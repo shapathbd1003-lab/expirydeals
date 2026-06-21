@@ -20,6 +20,7 @@ enum UserStatus {
 
 enum ListingStatus {
   draft
+  pending
   active
   paused
   expired

@@ -66,7 +66,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (body.region !== undefined) updateData.region = body.region?.trim() || null
     if (body.address !== undefined) updateData.address = body.address?.trim() || null
     if (body.status !== undefined) {
-      if (!['active', 'paused', 'draft', 'deleted'].includes(body.status)) return validationError('Invalid status')
+      if (!['active', 'paused', 'draft', 'pending', 'deleted'].includes(body.status)) return validationError('Invalid status')
       updateData.status = body.status
     }
     if (body.sold_via !== undefined) {
