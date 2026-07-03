@@ -70,10 +70,10 @@ export function Navbar() {
       {/* Top bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Row 1: Logo + nav links */}
-        <div className="flex items-center justify-between h-32">
+        <div className="flex items-center justify-between h-20 md:h-32">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
-            <Image src="/logo.png" alt="ExpiryDealsBD" width={400} height={112} className="h-28 w-auto object-contain" priority />
+            <Image src="/logo.png" alt="ExpiryDealsBD" width={400} height={112} className="h-16 md:h-28 w-auto object-contain" priority />
           </Link>
 
           {/* Right nav — desktop */}
@@ -119,8 +119,8 @@ export function Navbar() {
           </button>
         </div>
 
-        {/* Row 2: Search bar — desktop only */}
-        <div className="hidden md:block pb-3">
+        {/* Row 2: Search bar — all screen sizes */}
+        <div className="pb-3">
           <form onSubmit={handleSearch} className="flex w-full border border-gray-300 rounded-lg overflow-hidden focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
             <input
               type="text"
@@ -158,11 +158,6 @@ export function Navbar() {
       {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden bg-white border-t border-gray-100 px-4 py-4 space-y-3">
-          <form onSubmit={handleSearch} className="flex border border-gray-300 rounded-lg overflow-hidden">
-            <input type="text" value={q} onChange={e => setQ(e.target.value)}
-              placeholder={t.search} aria-label={t.search} className="flex-1 px-3 py-2.5 text-sm outline-none" />
-            <button type="submit" className="bg-orange-500 text-white px-4 text-sm font-semibold">{t.searchBtn}</button>
-          </form>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setLang(lang === 'en' ? 'bn' : 'en')}
