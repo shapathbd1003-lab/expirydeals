@@ -30,10 +30,7 @@ function mapListing(l: any) {
 
 export async function GET(req: NextRequest) {
   try {
-    const now = new Date()
     const today = startOfToday()
-    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-    const threeDays = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000)
 
     // Same visibility rules as browse: not expired, not the caller's own items
     const authUser = await getAuthUser(req)
@@ -41,13 +38,13 @@ export async function GET(req: NextRequest) {
 
     const [justAdded, expiringSoon] = await Promise.all([
       prisma.listing.findMany({
-        where: { status: 'active', expiryDate: { gte: today }, createdAt: { gte: yesterday }, ...sellerFilter },
+        where: { status: 'active', expiryDate: { gte: today }, ...sellerFilter },
         orderBy: { createdAt: 'desc' },
         take: 12,
         select: LISTING_CARD,
       }),
       prisma.listing.findMany({
-        where: { status: 'active', expiryDate: { gte: today, lte: threeDays }, ...sellerFilter },
+        where: { status: 'active', expiryDate: { gte: today }, ...sellerFilter },
         orderBy: { expiryDate: 'asc' },
         take: 12,
         select: LISTING_CARD,
