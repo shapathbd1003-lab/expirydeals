@@ -67,6 +67,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (body.address !== undefined) updateData.address = body.address?.trim() || null
     if (body.status !== undefined) {
       if (!['active', 'paused', 'draft', 'pending', 'deleted'].includes(body.status)) return validationError('Invalid status')
+      // Sellers cannot self-publish: 'active' is only allowed when the listing
+      // was already approved by admin (currently active or paused)
+      if (body.status === 'active' && !['active', 'paused'].includes(listing.status)) {
+        return validationError('Listings must be approved by an admin before going live')
+      }
       updateData.status = body.status
     }
     if (body.sold_via !== undefined) {

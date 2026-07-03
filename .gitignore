@@ -26,8 +26,8 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files — keep .env.example, ignore actual secrets
-.env*.local
-.env
+.env*
+!.env.example
 
 # local uploads (dev only)
 /public/uploads/

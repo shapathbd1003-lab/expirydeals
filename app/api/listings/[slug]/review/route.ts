@@ -14,6 +14,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
     if (!rating || rating < 1 || rating > 5) {
       return validationError('Rating must be between 1 and 5')
     }
+    if (comment && comment.length > 1000) {
+      return validationError('Comment must be under 1000 characters')
+    }
 
     const listing = await prisma.listing.findUnique({ where: { slug } })
     if (!listing) return err('NOT_FOUND', 'Listing not found', 404)
