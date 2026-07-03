@@ -1,6 +1,8 @@
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { ok, serverError } from '@/lib/response'
-import { daysRemaining } from '@/lib/slugify'
+import { getAuthUser } from '@/lib/auth'
+import { daysRemaining, startOfToday } from '@/lib/slugify'
 
 const LISTING_CARD = {
   id: true, slug: true, title: true,
@@ -26,21 +28,26 @@ function mapListing(l: any) {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const now = new Date()
+    const today = startOfToday()
     const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
     const threeDays = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000)
 
+    // Same visibility rules as browse: not expired, not the caller's own items
+    const authUser = await getAuthUser(req)
+    const sellerFilter = authUser ? { sellerId: { not: authUser.userId } } : {}
+
     const [justAdded, expiringSoon] = await Promise.all([
       prisma.listing.findMany({
-        where: { status: 'active', expiryDate: { gte: now }, createdAt: { gte: yesterday } },
+        where: { status: 'active', expiryDate: { gte: today }, createdAt: { gte: yesterday }, ...sellerFilter },
         orderBy: { createdAt: 'desc' },
         take: 12,
         select: LISTING_CARD,
       }),
       prisma.listing.findMany({
-        where: { status: 'active', expiryDate: { gte: now, lte: threeDays } },
+        where: { status: 'active', expiryDate: { gte: today, lte: threeDays }, ...sellerFilter },
         orderBy: { expiryDate: 'asc' },
         take: 12,
         select: LISTING_CARD,

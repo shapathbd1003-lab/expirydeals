@@ -11,6 +11,13 @@ export function generateSlug(title: string): string {
   return `${base}-${nanoid(8)}`
 }
 
+// Start of today — listings expiring today are still valid until end of day
+export function startOfToday(): Date {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
 export function daysRemaining(expiryDate: Date | string): number {
   const expiry = new Date(expiryDate)
   const now = new Date()

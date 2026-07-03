@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { paginated, serverError } from '@/lib/response'
-import { daysRemaining } from '@/lib/slugify'
+import { daysRemaining, startOfToday } from '@/lib/slugify'
 import { getAuthUser } from '@/lib/auth'
 import { Prisma } from '@prisma/client'
 
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
 
     const where: Prisma.ListingWhereInput = {
       status: 'active',
-      expiryDate: { gte: new Date() },
+      expiryDate: { gte: startOfToday() },
       ...(authUser ? { sellerId: { not: authUser.userId } } : {}),
     }
 
