@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next'
 import { prisma } from '@/lib/prisma'
+import { startOfToday } from '@/lib/slugify'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://expirydeals.com'
@@ -16,7 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const [listings, categories] = await Promise.all([
       prisma.listing.findMany({
-        where: { status: 'active', expiryDate: { gte: new Date() } },
+        where: { status: 'active', expiryDate: { gte: startOfToday() } },
         select: { slug: true, updatedAt: true },
         orderBy: { updatedAt: 'desc' },
         take: 5000,
