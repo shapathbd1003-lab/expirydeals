@@ -77,14 +77,19 @@ function ListingsContent() {
     }
   }, [filters])
 
-  useEffect(() => { fetchListings() }, [fetchListings])
+  // Debounce so typing in search/price inputs doesn't fire a request per keystroke
+  useEffect(() => {
+    const t = setTimeout(fetchListings, 300)
+    return () => clearTimeout(t)
+  }, [fetchListings])
 
   const applyFilters = (newFilters: Partial<typeof filters>) => {
     const updated = { ...filters, ...newFilters, page: 1 }
     setFilters(updated)
     const params = new URLSearchParams()
     Object.entries(updated).forEach(([k, v]) => { if (v) params.set(k, String(v)) })
-    router.push(`/listings?${params}`, { scroll: false })
+    // replace (not push) so filter changes don't spam browser history
+    router.replace(`/listings?${params}`, { scroll: false })
   }
 
   return (

@@ -90,11 +90,12 @@ export default function EditListingPage() {
           city: location?.district,
           region: location?.division,
           address: [location?.upazila, location?.address].filter(Boolean).join(', '),
-          status: form.status,
+          // Status only changeable for approved listings; drafts/pending keep server status
+          ...(['active', 'paused'].includes(form.status) ? { status: form.status } : {}),
         }),
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.message || 'Failed to save'); return }
+      if (!res.ok) { setError(data.error?.message || data.message || 'Failed to save'); return }
 
       // Save PC files as data URLs (no storage service needed)
       if (newFiles.length > 0) {
@@ -184,10 +185,16 @@ export default function EditListingPage() {
 
         <div>
           <label className="label">Status</label>
-          <select className="input" value={form.status} onChange={e => set('status', e.target.value)}>
-            <option value="active">Active</option>
-            <option value="paused">Paused</option>
-          </select>
+          {['active', 'paused'].includes(form.status) ? (
+            <select className="input" value={form.status} onChange={e => set('status', e.target.value)}>
+              <option value="active">Active</option>
+              <option value="paused">Paused</option>
+            </select>
+          ) : (
+            <p className="text-sm text-yellow-800 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+              ⏳ {form.status === 'draft' ? 'Draft — submit it for review from My Ads' : 'Pending admin approval'}
+            </p>
+          )}
         </div>
 
         {/* Photos */}
