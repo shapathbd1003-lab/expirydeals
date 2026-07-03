@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { Analytics } from '@vercel/analytics/react'
+import { GoogleAnalytics } from '@next/third-parties/google'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { AuthProvider } from '@/hooks/useAuth'
@@ -64,6 +66,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Footer />
           </LangProvider>
         </AuthProvider>
+        <Analytics />
+        {process.env.NEXT_PUBLIC_GA_ID && <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />}
       </body>
     </html>
   )
