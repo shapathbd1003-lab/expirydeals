@@ -1,5 +1,5 @@
-const APP_URL = process.env.NEXT_PUBLIC_BASE_URL || process.env.APP_URL || 'http://localhost:3000'
-const EMAIL_FROM = process.env.EMAIL_FROM || 'noreply@expirydeals.com'
+const APP_URL = process.env.NEXT_PUBLIC_BASE_URL || process.env.APP_URL || 'https://www.expirydealsbd.com'
+const EMAIL_FROM = process.env.EMAIL_FROM || 'noreply@expirydealsbd.com'
 
 function escapeHtml(str: string): string {
   return str

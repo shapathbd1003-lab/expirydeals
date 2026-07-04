@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { startOfToday } from '@/lib/slugify'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://expirydeals.com'
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.expirydealsbd.com'
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: 'hourly', priority: 1 },

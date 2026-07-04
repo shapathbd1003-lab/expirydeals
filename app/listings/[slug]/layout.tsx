@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://expirydeals.com'
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.expirydealsbd.com'
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const listing = await prisma.listing.findUnique({

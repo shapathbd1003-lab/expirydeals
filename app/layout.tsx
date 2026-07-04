@@ -7,7 +7,7 @@ import { Footer } from '@/components/Footer'
 import { AuthProvider } from '@/hooks/useAuth'
 import { LangProvider } from '@/hooks/useLang'
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://expirydeals.com'
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.expirydealsbd.com'
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
