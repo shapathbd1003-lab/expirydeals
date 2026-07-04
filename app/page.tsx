@@ -38,8 +38,7 @@ const T = {
   en: {
     badge: "Bangladesh's #1 Near-Expiry Marketplace",
     hero: 'Big Discounts on Near-Expiry Products',
-    heroSub: 'Save up to',
-    heroSub2: 'on food, groceries, cosmetics & more. Help reduce waste while saving money.',
+    heroSub: 'Great deals on food, groceries, cosmetics & more — save money and help reduce waste.',
     searchPlaceholder: 'Search products, brands...',
     allCategories: 'All Categories',
     search: 'Search',
@@ -76,8 +75,7 @@ const T = {
   bn: {
     badge: 'বাংলাদেশের #১ মেয়াদোত্তীর্ণ পণ্যের মার্কেটপ্লেস',
     hero: 'মেয়াদোত্তীর্ণ পণ্যে বড় ছাড়',
-    heroSub: 'সর্বোচ্চ',
-    heroSub2: 'পর্যন্ত সাশ্রয় করুন খাবার, মুদিপণ্য, প্রসাধনী ও আরও অনেক কিছুতে। অপচয় কমান, টাকা বাঁচান।',
+    heroSub: 'খাবার, মুদিপণ্য, প্রসাধনী ও আরও অনেক কিছুতে দারুণ ছাড় — টাকা বাঁচান, অপচয় কমান।',
     searchPlaceholder: 'পণ্য বা ব্র্যান্ড খুঁজুন...',
     allCategories: 'সব ক্যাটাগরি',
     search: 'খুঁজুন',
@@ -148,7 +146,7 @@ export default function HomePage() {
             {t.hero}
           </h1>
           <p className="text-orange-100 text-sm md:text-base mb-6 max-w-xl mx-auto">
-            {t.heroSub} <strong className="text-white">70% off</strong> {t.heroSub2}
+            {t.heroSub}
           </p>
 
           {/* Search form */}
