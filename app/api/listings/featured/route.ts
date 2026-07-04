@@ -31,6 +31,9 @@ function mapListing(l: any) {
 export async function GET(req: NextRequest) {
   try {
     const today = startOfToday()
+    // "Expiring Soon" = within the next 3 days only
+    const threeDays = new Date(today)
+    threeDays.setDate(threeDays.getDate() + 3)
 
     // Same visibility rules as browse: not expired, not the caller's own items
     const authUser = await getAuthUser(req)
@@ -44,7 +47,7 @@ export async function GET(req: NextRequest) {
         select: LISTING_CARD,
       }),
       prisma.listing.findMany({
-        where: { status: 'active', expiryDate: { gte: today }, ...sellerFilter },
+        where: { status: 'active', expiryDate: { gte: today, lte: threeDays }, ...sellerFilter },
         orderBy: { expiryDate: 'asc' },
         take: 12,
         select: LISTING_CARD,
