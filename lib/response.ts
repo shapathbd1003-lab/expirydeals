@@ -4,6 +4,14 @@ export function ok(data: unknown, status = 200) {
   return NextResponse.json({ success: true, data }, { status })
 }
 
+// Public data cached at the CDN edge — fast responses worldwide
+export function okCached(data: unknown, seconds = 60) {
+  return NextResponse.json(
+    { success: true, data },
+    { headers: { 'Cache-Control': `public, s-maxage=${seconds}, stale-while-revalidate=${seconds * 5}` } }
+  )
+}
+
 export function paginated(data: unknown[], pagination: {
   page: number; perPage: number; total: number
 }) {

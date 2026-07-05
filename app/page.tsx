@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ListingCard } from '@/components/ListingCard'
 import { useLang } from '@/hooks/useLang'
+import { useAuth } from '@/hooks/useAuth'
 
 const CATEGORY_ICONS: Record<string, string> = {
   'food-groceries': '🥫',
@@ -113,8 +114,9 @@ const T = {
 
 export default function HomePage() {
   const { lang } = useLang()
+  const { user } = useAuth()
   const t = T[lang]
-  const [featured, setFeatured] = useState<any>({ just_added: [], expiring_soon: [] })
+  const [rawFeatured, setRawFeatured] = useState<any>({ just_added: [], expiring_soon: [] })
   const [categories, setCategories] = useState<any[]>([])
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -125,12 +127,19 @@ export default function HomePage() {
       fetch('/api/categories').then(r => r.json()).catch(() => ({ data: [] })),
       fetch('/api/stats/public').then(r => r.json()).catch(() => ({ data: null })),
     ]).then(([feat, cats, st]) => {
-      setFeatured(feat.data || { just_added: [], expiring_soon: [] })
+      setRawFeatured(feat.data || { just_added: [], expiring_soon: [] })
       setCategories(cats.data || [])
       setStats(st.data || null)
       setLoading(false)
     })
   }, [])
+
+  // Hide the viewer's own listings (API responses are shared/cached, so filter here)
+  const notMine = (l: any) => !user || l.seller_id !== user.id
+  const featured = {
+    just_added: (rawFeatured.just_added || []).filter(notMine),
+    expiring_soon: (rawFeatured.expiring_soon || []).filter(notMine),
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

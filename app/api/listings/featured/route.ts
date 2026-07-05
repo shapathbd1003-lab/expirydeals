@@ -1,11 +1,9 @@
-import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { ok, serverError } from '@/lib/response'
-import { getAuthUser } from '@/lib/auth'
+import { okCached, serverError } from '@/lib/response'
 import { daysRemaining, startOfToday } from '@/lib/slugify'
 
 const LISTING_CARD = {
-  id: true, slug: true, title: true,
+  id: true, slug: true, title: true, sellerId: true,
   originalPrice: true, discountedPrice: true, discountPct: true,
   quantity: true, expiryDate: true, city: true,
   category: { select: { id: true, name: true, slug: true } },
@@ -19,6 +17,8 @@ const LISTING_CARD = {
 function mapListing(l: any) {
   return {
     ...l,
+    sellerId: undefined,
+    seller_id: l.sellerId, // so the client can hide the viewer's own listings
     originalPrice: l.originalPrice.toString(),
     discountedPrice: l.discountedPrice.toString(),
     discountPct: l.discountPct.toString(),
@@ -28,36 +28,33 @@ function mapListing(l: any) {
   }
 }
 
-export async function GET(req: NextRequest) {
+// Public + edge-cached: own-listing filtering happens client-side on the homepage
+export async function GET() {
   try {
     const today = startOfToday()
     // "Expiring Soon" = within the next 3 days only
     const threeDays = new Date(today)
     threeDays.setDate(threeDays.getDate() + 3)
 
-    // Same visibility rules as browse: not expired, not the caller's own items
-    const authUser = await getAuthUser(req)
-    const sellerFilter = authUser ? { sellerId: { not: authUser.userId } } : {}
-
     const [justAdded, expiringSoon] = await Promise.all([
       prisma.listing.findMany({
-        where: { status: 'active', expiryDate: { gte: today }, ...sellerFilter },
+        where: { status: 'active', expiryDate: { gte: today } },
         orderBy: { createdAt: 'desc' },
         take: 12,
         select: LISTING_CARD,
       }),
       prisma.listing.findMany({
-        where: { status: 'active', expiryDate: { gte: today, lte: threeDays }, ...sellerFilter },
+        where: { status: 'active', expiryDate: { gte: today, lte: threeDays } },
         orderBy: { expiryDate: 'asc' },
         take: 12,
         select: LISTING_CARD,
       }),
     ])
 
-    return ok({
+    return okCached({
       just_added: justAdded.map(mapListing),
       expiring_soon: expiringSoon.map(mapListing),
-    })
+    }, 60)
   } catch (e) {
     console.error(e)
     return serverError()
