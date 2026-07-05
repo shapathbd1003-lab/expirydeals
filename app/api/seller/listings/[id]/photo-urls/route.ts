@@ -1,7 +1,16 @@
 import { NextRequest } from 'next/server'
+import sharp from 'sharp'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 import { ok, notFound, unauthorized, validationError, serverError } from '@/lib/response'
+
+// Compress a base64 data URL to a small webp data URL so list APIs stay light
+async function compressDataUrl(dataUrl: string, width: number, quality: number): Promise<string> {
+  const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1)
+  const buf = Buffer.from(base64, 'base64')
+  const out = await sharp(buf).rotate().resize({ width, withoutEnlargement: true }).webp({ quality }).toBuffer()
+  return `data:image/webp;base64,${out.toString('base64')}`
+}
 
 const MAX_DATA_URL_BYTES = 2 * 1024 * 1024 // 2 MB
 const ALLOWED_DATA_TYPES = ['data:image/jpeg', 'data:image/jpg', 'data:image/png', 'data:image/webp', 'data:image/gif']
@@ -45,12 +54,23 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const created = []
     for (let i = 0; i < slots; i++) {
       const url = urls[i].trim()
+      // Data URLs get compressed to small webp variants; https URLs stored as-is
+      let urlThumb = url
+      let urlMedium = url
+      if (url.startsWith('data:')) {
+        try {
+          urlThumb = await compressDataUrl(url, 400, 70)
+          urlMedium = await compressDataUrl(url, 900, 75)
+        } catch (err) {
+          console.error('Photo compression failed, storing original:', err)
+        }
+      }
       const photo = await prisma.listingPhoto.create({
         data: {
           listingId: listing.id,
           storageKey: `url/${Date.now()}-${i}`,
-          urlThumb: url,
-          urlMedium: url,
+          urlThumb,
+          urlMedium,
           sortOrder: existing + i,
           isPrimary: existing === 0 && i === 0,
         },

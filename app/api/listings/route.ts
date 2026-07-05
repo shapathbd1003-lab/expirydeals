@@ -8,7 +8,6 @@ import { Prisma } from '@prisma/client'
 const PHOTO_SELECT = {
   select: {
     urlThumb: true,
-    urlMedium: true,
     isPrimary: true,
     sortOrder: true,
   },

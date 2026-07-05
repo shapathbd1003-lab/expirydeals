@@ -10,7 +10,7 @@ const LISTING_CARD = {
   quantity: true, expiryDate: true, city: true,
   category: { select: { id: true, name: true, slug: true } },
   photos: {
-    select: { urlThumb: true, urlMedium: true, isPrimary: true },
+    select: { urlThumb: true, isPrimary: true },
     orderBy: [{ isPrimary: 'desc' as const }, { sortOrder: 'asc' as const }] as any[],
     take: 1,
   },
