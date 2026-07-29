@@ -18,7 +18,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     return ok({
       ...listing,
-      originalPrice: listing.originalPrice.toString(),
+      originalPrice: listing.originalPrice?.toString() ?? null,
       discountedPrice: listing.discountedPrice.toString(),
       discountPct: listing.discountPct.toString(),
     })
@@ -44,6 +44,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (!listing || listing.status === 'deleted') return notFound('Listing not found')
     if (listing.sellerId !== auth.user.userId) return forbidden()
 
+    // listing_type is set at creation and never changes on edit
+    const isNearExpiry = listing.listingType === 'near_expiry'
     const updateData: Record<string, unknown> = {}
 
     if (body.title !== undefined) updateData.title = body.title.trim()
@@ -51,14 +53,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       if (body.description.length < 30) return validationError('description must be at least 30 characters')
       updateData.description = body.description.trim()
     }
+    if (body.condition !== undefined) updateData.condition = body.condition?.trim() || null
     if (body.category_id !== undefined) {
       if (!cat || !cat.isActive) return validationError('Invalid category')
+      const expectedGroup = isNearExpiry ? 'near_expiry' : 'general'
+      if (cat.group !== expectedGroup) return validationError(`Selected category doesn't match this listing's type`)
       updateData.categoryId = parseInt(body.category_id)
     }
-    if (body.original_price !== undefined) updateData.originalPrice = parseFloat(body.original_price)
+    if (body.original_price !== undefined) {
+      updateData.originalPrice = body.original_price ? parseFloat(body.original_price) : null
+    }
     if (body.discounted_price !== undefined) updateData.discountedPrice = parseFloat(body.discounted_price)
     if (body.quantity !== undefined) updateData.quantity = parseInt(body.quantity)
-    if (body.expiry_date !== undefined) {
+    if (isNearExpiry && body.expiry_date !== undefined) {
       if (new Date(body.expiry_date) <= new Date()) return validationError('expiry_date must be in the future')
       updateData.expiryDate = new Date(body.expiry_date)
     }
@@ -80,19 +87,26 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
     if (body.sold_note !== undefined) updateData.soldNote = body.sold_note?.trim() || null
 
-    // Recalculate discount pct if prices changed
-    const newOriginal = (updateData.originalPrice as number) || Number(listing.originalPrice)
+    // Recalculate discount pct if prices changed (original_price is optional for new/used items)
+    const newOriginal = updateData.originalPrice !== undefined
+      ? (updateData.originalPrice as number | null)
+      : (listing.originalPrice ? Number(listing.originalPrice) : null)
     const newDiscounted = (updateData.discountedPrice as number) || Number(listing.discountedPrice)
-    if (newOriginal <= 0 || newOriginal > 9_999_999) return validationError('original_price out of valid range')
     if (newDiscounted <= 0) return validationError('discounted_price must be positive')
-    if (newDiscounted >= newOriginal) return validationError('discounted_price must be less than original_price')
-    updateData.discountPct = discountPct(newOriginal, newDiscounted)
+    if (newDiscounted > 99_999_999) return validationError('discounted_price is too large')
+    if (newOriginal) {
+      if (newOriginal > 99_999_999) return validationError('original_price out of valid range')
+      if (newDiscounted >= newOriginal) return validationError('discounted_price must be less than original_price')
+      updateData.discountPct = discountPct(newOriginal, newDiscounted)
+    } else {
+      updateData.discountPct = 0
+    }
 
     const updated = await prisma.listing.update({ where: { id: params.id }, data: updateData })
 
     return ok({
       ...updated,
-      originalPrice: updated.originalPrice.toString(),
+      originalPrice: updated.originalPrice?.toString() ?? null,
       discountedPrice: updated.discountedPrice.toString(),
       discountPct: updated.discountPct.toString(),
     })

@@ -6,6 +6,9 @@ import Link from 'next/link'
 import { LocationPicker } from '@/components/LocationPicker'
 import { getUpazilas } from '@/lib/bd-locations'
 
+const NEW_CONDITIONS = ['Brand New (Sealed)', 'Brand New (Box Opened)', 'Refurbished']
+const USED_CONDITIONS = ['Like New', 'Good', 'Fair', 'For Parts']
+
 export default function EditListingPage() {
   const { user, token, loading: authLoading } = useAuth()
   const router = useRouter()
@@ -56,7 +59,9 @@ export default function EditListingPage() {
         title: d.title,
         description: d.description || '',
         categoryId: d.categoryId,
-        originalPrice: d.originalPrice,
+        listingType: d.listingType || 'near_expiry',
+        condition: d.condition || '',
+        originalPrice: d.originalPrice ?? '',
         discountedPrice: d.discountedPrice,
         quantity: d.quantity,
         expiryDate: d.expiryDate ? d.expiryDate.split('T')[0] : '',
@@ -83,10 +88,10 @@ export default function EditListingPage() {
           title: form.title,
           description: form.description,
           category_id: form.categoryId,
-          original_price: parseFloat(form.originalPrice),
+          original_price: form.originalPrice ? parseFloat(form.originalPrice) : null,
           discounted_price: parseFloat(form.discountedPrice),
           quantity: parseInt(form.quantity),
-          expiry_date: form.expiryDate,
+          ...(form.listingType === 'near_expiry' ? { expiry_date: form.expiryDate } : { condition: form.condition }),
           city: location?.district,
           region: location?.division,
           address: [location?.upazila, location?.address].filter(Boolean).join(', '),
@@ -151,7 +156,7 @@ export default function EditListingPage() {
           <label className="label">Category *</label>
           <select className="input" value={form.categoryId} onChange={e => set('categoryId', parseInt(e.target.value))} required>
             <option value="">Select category</option>
-            {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            {categories.filter((c: any) => c.group === (form.listingType === 'near_expiry' ? 'near_expiry' : 'general')).map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
 
@@ -162,11 +167,13 @@ export default function EditListingPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="label">Original Price (৳) *</label>
-            <input className="input" type="number" min="0" step="0.01" value={form.originalPrice} onChange={e => set('originalPrice', e.target.value)} required />
+            <label className="label">
+              {form.listingType === 'near_expiry' ? <>Original Price (৳) *</> : <>Original / MRP Price (৳) <span className="text-gray-400 font-normal">(optional)</span></>}
+            </label>
+            <input className="input" type="number" min="0" step="0.01" value={form.originalPrice} onChange={e => set('originalPrice', e.target.value)} required={form.listingType === 'near_expiry'} />
           </div>
           <div>
-            <label className="label">Discounted Price (৳) *</label>
+            <label className="label">{form.listingType === 'near_expiry' ? 'Discounted Price (৳) *' : 'Price (৳) *'}</label>
             <input className="input" type="number" min="0" step="0.01" value={form.discountedPrice} onChange={e => set('discountedPrice', e.target.value)} required />
           </div>
         </div>
@@ -176,10 +183,20 @@ export default function EditListingPage() {
           <input className="input" type="number" min="1" value={form.quantity} onChange={e => set('quantity', e.target.value)} required />
         </div>
 
-        <div>
-          <label className="label">Expiry Date *</label>
-          <input className="input" type="date" value={form.expiryDate} onChange={e => set('expiryDate', e.target.value)} required />
-        </div>
+        {form.listingType === 'near_expiry' ? (
+          <div>
+            <label className="label">Expiry Date *</label>
+            <input className="input" type="date" value={form.expiryDate} onChange={e => set('expiryDate', e.target.value)} required />
+          </div>
+        ) : (
+          <div>
+            <label className="label">Condition *</label>
+            <select className="input" value={form.condition} onChange={e => set('condition', e.target.value)} required>
+              <option value="">Select condition...</option>
+              {(form.listingType === 'new_item' ? NEW_CONDITIONS : USED_CONDITIONS).map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+        )}
 
         {location && <LocationPicker value={location} onChange={setLocation} />}
 

@@ -227,8 +227,13 @@ function MyListingsContent() {
                   </div>
                   <div className="flex items-center gap-3 text-xs text-gray-500 flex-shrink-0">
                     <span>👁 {l.viewCount}</span>
-                    {tab !== 'draft' && (
-                      <span className={l.days_remaining <= 3 ? 'text-red-500 font-medium' : ''}>{daysLeft(l.expiryDate)}</span>
+                    {tab !== 'draft' && (!l.listingType || l.listingType === 'near_expiry') && (
+                      <span className={l.days_remaining != null && l.days_remaining <= 3 ? 'text-red-500 font-medium' : ''}>{daysLeft(l.expiryDate)}</span>
+                    )}
+                    {tab !== 'draft' && l.listingType && l.listingType !== 'near_expiry' && (
+                      <span className={`px-1.5 py-0.5 rounded font-medium ${l.listingType === 'new_item' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                        {l.listingType === 'new_item' ? 'New' : 'Used'}
+                      </span>
                     )}
                     {tab === 'draft' && (
                       <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs font-medium">Draft</span>

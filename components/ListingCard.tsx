@@ -4,10 +4,12 @@ interface Listing {
   id: string
   slug: string
   title: string
-  originalPrice: string
+  listingType?: string
+  condition?: string | null
+  originalPrice: string | null
   discountedPrice: string
   discountPct: string
-  days_remaining: number
+  days_remaining: number | null
   city: string
   region?: string
   category: { name: string; slug: string }
@@ -21,10 +23,21 @@ function ExpiryBadge({ days }: { days: number }) {
   return <span className="text-xs px-1.5 py-0.5 rounded bg-orange-100 text-orange-700">{days}d left</span>
 }
 
+function TypeBadge({ listingType, condition }: { listingType?: string; condition?: string | null }) {
+  if (listingType === 'new_item') {
+    return <span className="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium truncate max-w-[6rem]">{condition || 'Brand New'}</span>
+  }
+  if (listingType === 'used_item') {
+    return <span className="text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-medium truncate max-w-[6rem]">{condition || 'Used'}</span>
+  }
+  return null
+}
+
 export function ListingCard({ listing }: { listing: Listing }) {
   const discount = Math.round(parseFloat(listing.discountPct))
   const price = parseFloat(listing.discountedPrice).toLocaleString('en-BD')
-  const original = parseFloat(listing.originalPrice).toLocaleString('en-BD')
+  const original = listing.originalPrice ? parseFloat(listing.originalPrice).toLocaleString('en-BD') : null
+  const isNearExpiry = !listing.listingType || listing.listingType === 'near_expiry'
 
   return (
     <Link href={`/listings/${listing.slug}`}
@@ -59,12 +72,14 @@ export function ListingCard({ listing }: { listing: Listing }) {
 
         {/* Price — Bikroy style: big bold price */}
         <p className="text-base font-bold text-gray-900">৳ {price}</p>
-        <p className="text-xs text-gray-400 line-through">৳ {original}</p>
+        {original && <p className="text-xs text-gray-400 line-through">৳ {original}</p>}
 
         {/* Meta row */}
-        <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+        <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100 gap-2">
           <span className="text-xs text-gray-500 truncate">{listing.city}</span>
-          <ExpiryBadge days={listing.days_remaining} />
+          {isNearExpiry && listing.days_remaining != null
+            ? <ExpiryBadge days={listing.days_remaining} />
+            : <TypeBadge listingType={listing.listingType} condition={listing.condition} />}
         </div>
       </div>
     </Link>

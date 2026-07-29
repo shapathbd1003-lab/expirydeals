@@ -27,12 +27,15 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
 
     if (!listing || listing.status === 'deleted') return notFound('Listing not found')
 
-    // Auto-expire only after the expiry day has fully passed (end of day comparison)
-    const expiryEndOfDay = new Date(listing.expiryDate)
-    expiryEndOfDay.setHours(23, 59, 59, 999)
-    if ((listing.status === 'active' || listing.status === 'paused') && expiryEndOfDay < new Date()) {
-      await prisma.listing.update({ where: { id: listing.id }, data: { status: 'expired' } })
-      listing.status = 'expired'
+    // Auto-expire only applies to near-expiry listings (others have no expiry date)
+    if (listing.listingType === 'near_expiry' && listing.expiryDate) {
+      // Compare at end of the expiry day, not the exact moment
+      const expiryEndOfDay = new Date(listing.expiryDate)
+      expiryEndOfDay.setHours(23, 59, 59, 999)
+      if ((listing.status === 'active' || listing.status === 'paused') && expiryEndOfDay < new Date()) {
+        await prisma.listing.update({ where: { id: listing.id }, data: { status: 'expired' } })
+        listing.status = 'expired'
+      }
     }
 
     if (listing.status === 'expired') {
@@ -51,12 +54,14 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
       title: listing.title,
       description: listing.description,
       category: listing.category,
-      originalPrice: listing.originalPrice.toString(),
+      listing_type: listing.listingType,
+      condition: listing.condition,
+      originalPrice: listing.originalPrice?.toString() ?? null,
       discountedPrice: listing.discountedPrice.toString(),
       discountPct: listing.discountPct.toString(),
       quantity: listing.quantity,
       expiryDate: listing.expiryDate,
-      days_remaining: daysRemaining(listing.expiryDate),
+      days_remaining: listing.expiryDate ? daysRemaining(listing.expiryDate) : null,
       city: listing.city,
       region: listing.region,
       address: listing.address,

@@ -24,12 +24,13 @@ export async function POST(req: NextRequest) {
     const auth = await requireAuth(req, 'admin')
     if ('error' in auth) return auth.status === 403 ? forbidden() : unauthorized()
 
-    const { name } = await req.json()
+    const { name, group } = await req.json()
     if (!name?.trim()) return validationError('name is required')
+    if (group && !['near_expiry', 'general'].includes(group)) return validationError('Invalid group')
 
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
     const cat = await prisma.category.create({
-      data: { name: name.trim(), slug, isActive: true },
+      data: { name: name.trim(), slug, isActive: true, group: group || 'near_expiry' },
     })
     return ok(cat, 201)
   } catch (e: any) {

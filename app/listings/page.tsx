@@ -21,6 +21,12 @@ const CATEGORY_NAMES_BN: Record<string, string> = {
   'other': 'অন্যান্য',
 }
 
+const TYPE_TABS = [
+  { value: 'near_expiry', en: '⏰ Near Expiry', bn: '⏰ মেয়াদ শেষ হওয়ার কাছাকাছি' },
+  { value: 'new_item', en: '✨ New', bn: '✨ নতুন' },
+  { value: 'used_item', en: '♻️ Used', bn: '♻️ ব্যবহৃত' },
+] as const
+
 function ListingsContent() {
   const { lang } = useLang()
   const searchParams = useSearchParams()
@@ -30,6 +36,7 @@ function ListingsContent() {
   const [categories, setCategories] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({
+    type: searchParams.get('type') || 'near_expiry',
     q: searchParams.get('q') || '',
     category: searchParams.get('category') || '',
     region: searchParams.get('region') || '',
@@ -41,9 +48,13 @@ function ListingsContent() {
     page: parseInt(searchParams.get('page') || '1'),
   })
 
+  const isNearExpiry = filters.type === 'near_expiry'
+  const categoriesForType = categories.filter(c => c.group === (isNearExpiry ? 'near_expiry' : 'general'))
+
   // Sync filters when URL changes (e.g. clicking navbar category links)
   useEffect(() => {
     setFilters({
+      type: searchParams.get('type') || 'near_expiry',
       q: searchParams.get('q') || '',
       category: searchParams.get('category') || '',
       region: searchParams.get('region') || '',
@@ -92,8 +103,26 @@ function ListingsContent() {
     router.replace(`/listings?${params}`, { scroll: false })
   }
 
+  const changeType = (type: string) => {
+    // category/sort don't carry over across types since category sets and
+    // expiry-based sorting only make sense for the matching type
+    applyFilters({ type, category: '', sort: 'newest' })
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Listing type tabs */}
+      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6 w-fit">
+        {TYPE_TABS.map(t => (
+          <button key={t.value} onClick={() => changeType(t.value)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              filters.type === t.value ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
+            }`}>
+            {lang === 'bn' ? t.bn : t.en}
+          </button>
+        ))}
+      </div>
+
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Sidebar filters */}
         <aside className="lg:w-56 flex-shrink-0 space-y-5">
@@ -109,7 +138,7 @@ function ListingsContent() {
             <h3 className="font-semibold text-gray-900 mb-2 text-sm">{lang === 'bn' ? 'ক্যাটাগরি' : 'Category'}</h3>
             <select className="input" value={filters.category} onChange={(e) => applyFilters({ category: e.target.value })}>
               <option value="">{lang === 'bn' ? 'সব ক্যাটাগরি' : 'All categories'}</option>
-              {categories.map((c: any) => <option key={c.id} value={c.slug}>{lang === 'bn' ? (CATEGORY_NAMES_BN[c.slug] || c.name) : c.name}</option>)}
+              {categoriesForType.map((c: any) => <option key={c.id} value={c.slug}>{lang === 'bn' ? (CATEGORY_NAMES_BN[c.slug] || c.name) : c.name}</option>)}
             </select>
           </div>
           <div className="space-y-2">
@@ -154,8 +183,8 @@ function ListingsContent() {
             </p>
             <select className="input w-auto text-sm" value={filters.sort} onChange={(e) => applyFilters({ sort: e.target.value })}>
               <option value="newest">{lang === 'bn' ? 'সবচেয়ে নতুন' : 'Newest first'}</option>
-              <option value="expiry_asc">{lang === 'bn' ? 'শীঘ্রই মেয়াদোত্তীর্ণ' : 'Expiring soonest'}</option>
-              <option value="expiry_desc">{lang === 'bn' ? 'সর্বোচ্চ মেয়াদ' : 'Expiring latest'}</option>
+              {isNearExpiry && <option value="expiry_asc">{lang === 'bn' ? 'শীঘ্রই মেয়াদোত্তীর্ণ' : 'Expiring soonest'}</option>}
+              {isNearExpiry && <option value="expiry_desc">{lang === 'bn' ? 'সর্বোচ্চ মেয়াদ' : 'Expiring latest'}</option>}
               <option value="discount_desc">{lang === 'bn' ? 'সর্বোচ্চ ছাড়' : 'Biggest discount'}</option>
               <option value="price_asc">{lang === 'bn' ? 'মূল্য: কম থেকে বেশি' : 'Price: low to high'}</option>
               <option value="price_desc">{lang === 'bn' ? 'মূল্য: বেশি থেকে কম' : 'Price: high to low'}</option>

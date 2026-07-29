@@ -5,13 +5,23 @@ import { useAuth } from '@/hooks/useAuth'
 import Link from 'next/link'
 import { LocationPicker } from '@/components/LocationPicker'
 
+const LISTING_TYPES = [
+  { value: 'near_expiry', label: '⏰ Near Expiry', desc: 'Food, medicine & products nearing expiry' },
+  { value: 'new_item', label: '✨ New Product', desc: 'Brand new, unused item' },
+  { value: 'used_item', label: '♻️ Used Product', desc: 'Pre-owned item in working condition' },
+]
+
+const NEW_CONDITIONS = ['Brand New (Sealed)', 'Brand New (Box Opened)', 'Refurbished']
+const USED_CONDITIONS = ['Like New', 'Good', 'Fair', 'For Parts']
+
 export default function NewListingPage() {
   const { user, token, loading: authLoading } = useAuth()
   const router = useRouter()
   const [categories, setCategories] = useState<any[]>([])
+  const [listingType, setListingType] = useState<'near_expiry' | 'new_item' | 'used_item'>('near_expiry')
   const [form, setForm] = useState({
     title: '', category_id: '', description: '',
-    original_price: '', discounted_price: '',
+    original_price: '', discounted_price: '', condition: '',
     quantity: '', expiry_date: '', city: '', region: '', address: '',
   })
   const [location, setLocation] = useState({ division: '', district: '', upazila: '', address: '' })
@@ -23,6 +33,10 @@ export default function NewListingPage() {
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
 
+  const isNearExpiry = listingType === 'near_expiry'
+  const categoriesForType = categories.filter(c => c.group === (isNearExpiry ? 'near_expiry' : 'general'))
+  const conditionOptions = listingType === 'new_item' ? NEW_CONDITIONS : USED_CONDITIONS
+
   useEffect(() => {
     if (!authLoading && !user) router.push('/login')
   }, [user, authLoading, router])
@@ -30,6 +44,12 @@ export default function NewListingPage() {
   useEffect(() => {
     fetch('/api/categories').then(r => r.json()).then(d => setCategories(d.data || []))
   }, [])
+
+  // Reset category and type-specific fields when switching listing type
+  const changeType = (t: typeof listingType) => {
+    setListingType(t)
+    setForm(f => ({ ...f, category_id: '', condition: '', expiry_date: '', original_price: '' }))
+  }
 
   const addPhotos = (files: FileList | null) => {
     if (!files) return
@@ -60,6 +80,7 @@ export default function NewListingPage() {
         credentials: 'include',
         body: JSON.stringify({
           ...form,
+          listing_type: listingType,
           city: location.district,
           region: location.division,
           address: [location.upazila, location.address].filter(Boolean).join(', '),
@@ -116,6 +137,19 @@ export default function NewListingPage() {
         <h1 className="text-xl font-bold text-gray-900">Create New Listing</h1>
       </div>
 
+      {/* Listing type selector — always visible, switching resets type-specific fields */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-6">
+        {LISTING_TYPES.map(t => (
+          <button key={t.value} type="button" onClick={() => changeType(t.value as typeof listingType)}
+            className={`text-left p-3 rounded-xl border-2 transition ${
+              listingType === t.value ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white hover:border-gray-300'
+            }`}>
+            <p className="font-semibold text-sm text-gray-900">{t.label}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{t.desc}</p>
+          </button>
+        ))}
+      </div>
+
       {/* Steps indicator */}
       <div className="flex gap-2 mb-8">
         {['Details', 'Pricing', 'Location & Photos'].map((s, i) => (
@@ -143,7 +177,7 @@ export default function NewListingPage() {
               <label htmlFor="new-category" className="label">Category <span className="text-red-500">*</span></label>
               <select id="new-category" className="input" required value={form.category_id} onChange={e => setForm({...form, category_id: e.target.value})}>
                 <option value="">Select category...</option>
-                {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {categoriesForType.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
@@ -176,12 +210,14 @@ export default function NewListingPage() {
             <h2 className="font-semibold text-gray-900">Pricing & Stock</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="new-orig-price" className="label">Original Price (৳) <span className="text-red-500">*</span></label>
-                <input id="new-orig-price" type="number" min="0.01" step="0.01" className="input" required
+                <label htmlFor="new-orig-price" className="label">
+                  {isNearExpiry ? <>Original Price (৳) <span className="text-red-500">*</span></> : <>Original / MRP Price (৳) <span className="text-gray-400 font-normal">(optional)</span></>}
+                </label>
+                <input id="new-orig-price" type="number" min="0.01" step="0.01" className="input" required={isNearExpiry}
                   value={form.original_price} onChange={e => setForm({...form, original_price: e.target.value})} />
               </div>
               <div>
-                <label htmlFor="new-disc-price" className="label">Discounted Price (৳) <span className="text-red-500">*</span></label>
+                <label htmlFor="new-disc-price" className="label">{isNearExpiry ? 'Discounted Price (৳)' : 'Price (৳)'} <span className="text-red-500">*</span></label>
                 <input id="new-disc-price" type="number" min="0.01" step="0.01" className="input" required
                   value={form.discounted_price} onChange={e => setForm({...form, discounted_price: e.target.value})} />
               </div>
@@ -197,20 +233,31 @@ export default function NewListingPage() {
                 <input id="new-qty" type="number" min="1" className="input" required
                   value={form.quantity} onChange={e => setForm({...form, quantity: e.target.value})} />
               </div>
-              <div>
-                <label htmlFor="new-expiry" className="label">Expiry Date <span className="text-red-500">*</span></label>
-                <input id="new-expiry" type="date" className="input" required min={new Date().toISOString().split('T')[0]}
-                  value={form.expiry_date} onChange={e => setForm({...form, expiry_date: e.target.value})} />
-              </div>
+              {isNearExpiry ? (
+                <div>
+                  <label htmlFor="new-expiry" className="label">Expiry Date <span className="text-red-500">*</span></label>
+                  <input id="new-expiry" type="date" className="input" required min={new Date().toISOString().split('T')[0]}
+                    value={form.expiry_date} onChange={e => setForm({...form, expiry_date: e.target.value})} />
+                </div>
+              ) : (
+                <div>
+                  <label htmlFor="new-condition" className="label">Condition <span className="text-red-500">*</span></label>
+                  <select id="new-condition" className="input" required
+                    value={form.condition} onChange={e => setForm({...form, condition: e.target.value})}>
+                    <option value="">Select condition...</option>
+                    {conditionOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+              )}
             </div>
             <div className="flex gap-3">
               <button onClick={() => setStep(1)} className="btn-secondary flex-1">← Back</button>
               <button onClick={() => {
-                if (!form.original_price || !form.discounted_price || !form.quantity || !form.expiry_date) {
+                if (!form.discounted_price || !form.quantity || (isNearExpiry && (!form.original_price || !form.expiry_date)) || (!isNearExpiry && !form.condition)) {
                   setError('Please fill all required fields'); return
                 }
-                if (parseFloat(form.discounted_price) >= parseFloat(form.original_price)) {
-                  setError('Discounted price must be less than original price'); return
+                if (form.original_price && parseFloat(form.discounted_price) >= parseFloat(form.original_price)) {
+                  setError(isNearExpiry ? 'Discounted price must be less than original price' : 'Price must be less than original/MRP price'); return
                 }
                 setError(''); setStep(3)
               }} className="btn-primary flex-1">Next →</button>

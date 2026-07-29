@@ -28,6 +28,9 @@ export async function GET(req: NextRequest) {
     const minDiscount = parseFloat(searchParams.get('min_discount') || '0') || 0
     const expiryBefore = searchParams.get('expiry_before') || ''
     const expiryAfter = searchParams.get('expiry_after') || ''
+    const rawType = searchParams.get('type') || 'near_expiry'
+    const type = ['near_expiry', 'new_item', 'used_item'].includes(rawType) ? rawType : 'near_expiry'
+    const isNearExpiry = type === 'near_expiry'
     const sort = searchParams.get('sort') || 'newest'
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
     const perPage = Math.min(48, Math.max(1, parseInt(searchParams.get('per_page') || '24')))
@@ -37,7 +40,9 @@ export async function GET(req: NextRequest) {
 
     const where: Prisma.ListingWhereInput = {
       status: 'active',
-      expiryDate: { gte: startOfToday() },
+      listingType: type as Prisma.ListingWhereInput['listingType'],
+      // Only near-expiry listings carry an expiry date to filter on
+      ...(isNearExpiry ? { expiryDate: { gte: startOfToday() } } : {}),
       ...(authUser ? { sellerId: { not: authUser.userId } } : {}),
     }
 
@@ -68,10 +73,10 @@ export async function GET(req: NextRequest) {
     if (minDiscount > 0) {
       where.discountPct = { gte: minDiscount }
     }
-    if (expiryBefore) {
+    if (isNearExpiry && expiryBefore) {
       where.expiryDate = { ...(where.expiryDate as object), lte: new Date(expiryBefore) }
     }
-    if (expiryAfter) {
+    if (isNearExpiry && expiryAfter) {
       where.expiryDate = { ...(where.expiryDate as object), gte: new Date(expiryAfter) }
     }
 
@@ -80,9 +85,9 @@ export async function GET(req: NextRequest) {
         ? { discountedPrice: 'asc' }
         : sort === 'price_desc'
         ? { discountedPrice: 'desc' }
-        : sort === 'expiry_asc'
+        : isNearExpiry && sort === 'expiry_asc'
         ? { expiryDate: 'asc' }
-        : sort === 'expiry_desc'
+        : isNearExpiry && sort === 'expiry_desc'
         ? { expiryDate: 'desc' }
         : sort === 'discount_desc'
         ? { discountPct: 'desc' }
@@ -99,6 +104,8 @@ export async function GET(req: NextRequest) {
           id: true,
           slug: true,
           title: true,
+          listingType: true,
+          condition: true,
           originalPrice: true,
           discountedPrice: true,
           discountPct: true,
@@ -116,10 +123,10 @@ export async function GET(req: NextRequest) {
 
     const data = listings.map((l) => ({
       ...l,
-      originalPrice: l.originalPrice.toString(),
+      originalPrice: l.originalPrice?.toString() ?? null,
       discountedPrice: l.discountedPrice.toString(),
       discountPct: l.discountPct.toString(),
-      days_remaining: daysRemaining(l.expiryDate),
+      days_remaining: l.expiryDate ? daysRemaining(l.expiryDate) : null,
       primary_photo: l.photos[0] || null,
       photos: undefined,
     }))

@@ -9,6 +9,7 @@ export default function AdminCategoriesPage() {
   const router = useRouter()
   const [categories, setCategories] = useState<any[]>([])
   const [newName, setNewName] = useState('')
+  const [newGroup, setNewGroup] = useState<'near_expiry' | 'general'>('near_expiry')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export default function AdminCategoriesPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       credentials: 'include',
-      body: JSON.stringify({ name: newName }),
+      body: JSON.stringify({ name: newName, group: newGroup }),
     })
     setNewName('')
     fetchCats()
@@ -60,6 +61,10 @@ export default function AdminCategoriesPage() {
 
       <form onSubmit={addCategory} className="flex gap-2 mb-6">
         <input className="input" placeholder="New category name..." value={newName} onChange={e => setNewName(e.target.value)} required />
+        <select className="input w-auto" value={newGroup} onChange={e => setNewGroup(e.target.value as typeof newGroup)}>
+          <option value="near_expiry">Near Expiry</option>
+          <option value="general">General (New/Used)</option>
+        </select>
         <button type="submit" className="btn-primary">Add</button>
       </form>
 
@@ -69,6 +74,7 @@ export default function AdminCategoriesPage() {
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Category</th>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Group</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Listings</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Status</th>
                 <th className="px-4 py-3" />
@@ -77,7 +83,12 @@ export default function AdminCategoriesPage() {
             <tbody className="divide-y divide-gray-50">
               {categories.map((c: any) => (
                 <tr key={c.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-900">{c.name}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900">{c.icon} {c.name}</td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-0.5 rounded-full text-xs ${c.group === 'general' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
+                      {c.group === 'general' ? 'General' : 'Near Expiry'}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-gray-500">{c._count?.listings || 0}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-0.5 rounded-full text-xs ${c.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>

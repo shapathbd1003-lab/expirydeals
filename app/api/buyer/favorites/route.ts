@@ -27,6 +27,8 @@ export async function GET(req: NextRequest) {
               id: true,
               slug: true,
               title: true,
+              listingType: true,
+              condition: true,
               originalPrice: true,
               discountedPrice: true,
               discountPct: true,
@@ -52,10 +54,10 @@ export async function GET(req: NextRequest) {
     return paginated(
       favorites.map((f) => ({
         ...f.listing,
-        originalPrice: f.listing.originalPrice.toString(),
+        originalPrice: f.listing.originalPrice?.toString() ?? null,
         discountedPrice: f.listing.discountedPrice.toString(),
         discountPct: f.listing.discountPct.toString(),
-        days_remaining: daysRemaining(f.listing.expiryDate),
+        days_remaining: f.listing.expiryDate ? daysRemaining(f.listing.expiryDate) : null,
         primary_photo: f.listing.photos[0] || null,
         photos: undefined,
         savedAt: f.createdAt,

@@ -33,6 +33,17 @@ enum SoldVia {
   other
 }
 
+enum ListingType {
+  near_expiry
+  new_item
+  used_item
+}
+
+enum CategoryGroup {
+  near_expiry
+  general
+}
+
 enum ReportReason {
   spam
   wrong_info
@@ -120,14 +131,15 @@ model RefreshToken {
 }
 
 model Category {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  slug      String   @unique
+  id        Int           @id @default(autoincrement())
+  name      String        @unique
+  slug      String        @unique
   icon      String?
-  isActive  Boolean  @default(true) @map("is_active")
-  sortOrder Int      @default(0) @map("sort_order")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  group     CategoryGroup @default(near_expiry)
+  isActive  Boolean       @default(true) @map("is_active")
+  sortOrder Int           @default(0) @map("sort_order")
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
 
   listings Listing[]
 
@@ -138,14 +150,16 @@ model Listing {
   id              String        @id @default(uuid())
   sellerId        String        @map("seller_id")
   categoryId      Int           @map("category_id")
+  listingType     ListingType   @default(near_expiry) @map("listing_type")
   title           String
   slug            String        @unique
   description     String
-  originalPrice   Decimal       @map("original_price") @db.Decimal(10, 2)
+  condition       String?       @map("condition_note")
+  originalPrice   Decimal?      @map("original_price") @db.Decimal(10, 2)
   discountedPrice Decimal       @map("discounted_price") @db.Decimal(10, 2)
-  discountPct     Decimal       @map("discount_pct") @db.Decimal(5, 2)
+  discountPct     Decimal       @default(0) @map("discount_pct") @db.Decimal(5, 2)
   quantity        Int
-  expiryDate      DateTime      @map("expiry_date") @db.Date
+  expiryDate      DateTime?     @map("expiry_date") @db.Date
   city            String
   region          String?
   address         String?
@@ -177,6 +191,7 @@ model Listing {
   @@index([status, expiryDate])
   @@index([status, createdAt(sort: Desc)])
   @@index([sellerId, status])
+  @@index([listingType, status])
   @@map("listings")
 }
 

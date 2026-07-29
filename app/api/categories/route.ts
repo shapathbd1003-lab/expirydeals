@@ -6,20 +6,24 @@ import { startOfToday } from '@/lib/slugify'
 // response (and "today") at build/deploy time since no dynamic APIs are read.
 export const dynamic = 'force-dynamic'
 
-// Public + edge-cached. Counts include only active, non-expired listings.
+// Public + edge-cached. Counts include only active listings, and only
+// exclude expired ones for near-expiry (new/used listings have no expiry date).
 export async function GET() {
   try {
     const categories = await prisma.category.findMany({
       where: { isActive: true },
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
       select: {
-        id: true, name: true, slug: true,
+        id: true, name: true, slug: true, group: true, icon: true,
         _count: {
           select: {
             listings: {
               where: {
                 status: 'active',
-                expiryDate: { gte: startOfToday() },
+                OR: [
+                  { listingType: { not: 'near_expiry' } },
+                  { expiryDate: { gte: startOfToday() } },
+                ],
               },
             },
           },

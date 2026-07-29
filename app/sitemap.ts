@@ -19,7 +19,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const [listings, categories] = await Promise.all([
       prisma.listing.findMany({
-        where: { status: 'active', expiryDate: { gte: startOfToday() } },
+        where: {
+          status: 'active',
+          OR: [
+            { listingType: { not: 'near_expiry' } },
+            { expiryDate: { gte: startOfToday() } },
+          ],
+        },
         select: { slug: true, updatedAt: true },
         orderBy: { updatedAt: 'desc' },
         take: 5000,

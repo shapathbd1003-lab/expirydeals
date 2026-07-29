@@ -20,6 +20,8 @@ export async function GET(req: NextRequest) {
             id: true,
             slug: true,
             title: true,
+            listingType: true,
+            condition: true,
             originalPrice: true,
             discountedPrice: true,
             discountPct: true,
@@ -44,10 +46,10 @@ export async function GET(req: NextRequest) {
     return ok(
       viewed.map((v) => ({
         ...v.listing,
-        originalPrice: v.listing.originalPrice.toString(),
+        originalPrice: v.listing.originalPrice?.toString() ?? null,
         discountedPrice: v.listing.discountedPrice.toString(),
         discountPct: v.listing.discountPct.toString(),
-        days_remaining: daysRemaining(v.listing.expiryDate),
+        days_remaining: v.listing.expiryDate ? daysRemaining(v.listing.expiryDate) : null,
         primary_photo: v.listing.photos[0] || null,
         photos: undefined,
         viewedAt: v.viewedAt,

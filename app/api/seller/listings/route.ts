@@ -31,6 +31,8 @@ export async function GET(req: NextRequest) {
           id: true,
           slug: true,
           title: true,
+          listingType: true,
+          condition: true,
           originalPrice: true,
           discountedPrice: true,
           discountPct: true,
@@ -58,7 +60,7 @@ export async function GET(req: NextRequest) {
     return paginated(
       listings.map((l) => ({
         ...l,
-        originalPrice: l.originalPrice.toString(),
+        originalPrice: l.originalPrice?.toString() ?? null,
         discountedPrice: l.discountedPrice.toString(),
         discountPct: l.discountPct.toString(),
       })),
@@ -70,6 +72,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
+const LISTING_TYPES = ['near_expiry', 'new_item', 'used_item']
+
 export async function POST(req: NextRequest) {
   try {
     const auth = await requireAuth(req)
@@ -78,48 +82,70 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const {
       title, category_id, description, original_price, discounted_price,
-      quantity, expiry_date, city, region, address, status: rawStatus,
+      quantity, expiry_date, condition, city, region, address, status: rawStatus,
     } = body
     const status = rawStatus === 'pending' ? 'pending' : 'draft'
+    const listingType = LISTING_TYPES.includes(body.listing_type) ? body.listing_type : 'near_expiry'
+    const isNearExpiry = listingType === 'near_expiry'
 
-    if (!title || !category_id || !description || !original_price || !discounted_price || !quantity || !expiry_date || !city) {
-      return validationError('title, category_id, description, original_price, discounted_price, quantity, expiry_date, and city are required')
+    if (!title || !category_id || !description || !discounted_price || !quantity || !city) {
+      return validationError('title, category_id, description, discounted_price, quantity, and city are required')
     }
-    const origNum = parseFloat(original_price)
+    if (isNearExpiry && !original_price) {
+      return validationError('original_price is required for near-expiry listings')
+    }
+    if (isNearExpiry && !expiry_date) {
+      return validationError('expiry_date is required for near-expiry listings')
+    }
+    if (!isNearExpiry && !condition) {
+      return validationError('condition is required for new and used product listings')
+    }
+
     const discNum = parseFloat(discounted_price)
-    if (isNaN(origNum) || origNum <= 0) return validationError('original_price must be a positive number')
     if (isNaN(discNum) || discNum <= 0) return validationError('discounted_price must be a positive number')
-    if (origNum > 9_999_999) return validationError('original_price is too large')
-    if (discNum >= origNum) {
-      return validationError('discounted_price must be less than original_price')
+    if (discNum > 99_999_999) return validationError('discounted_price is too large')
+
+    let origNum: number | null = null
+    if (original_price) {
+      origNum = parseFloat(original_price)
+      if (isNaN(origNum) || origNum <= 0) return validationError('original_price must be a positive number')
+      if (origNum > 99_999_999) return validationError('original_price is too large')
+      if (discNum >= origNum) return validationError('discounted_price must be less than original_price')
     }
+
     const qty = parseInt(quantity)
     if (isNaN(qty) || qty < 1 || qty > 100_000) return validationError('quantity must be between 1 and 100,000')
     if (description.length < 30) {
       return validationError('description must be at least 30 characters')
     }
-    if (new Date(expiry_date) <= new Date()) {
+    if (isNearExpiry && new Date(expiry_date) <= new Date()) {
       return validationError('expiry_date must be in the future')
     }
 
     const category = await prisma.category.findUnique({ where: { id: parseInt(category_id) } })
     if (!category || !category.isActive) return validationError('Invalid category')
+    const expectedGroup = isNearExpiry ? 'near_expiry' : 'general'
+    if (category.group !== expectedGroup) {
+      return validationError(`Selected category doesn't match this listing type`)
+    }
 
     const slug = generateSlug(title)
-    const pct = discountPct(parseFloat(original_price), parseFloat(discounted_price))
+    const pct = origNum ? discountPct(origNum, discNum) : 0
 
     const listing = await prisma.listing.create({
       data: {
         sellerId: auth.user.userId,
         categoryId: parseInt(category_id),
+        listingType,
         title: title.trim(),
         slug,
         description: description.trim(),
-        originalPrice: parseFloat(original_price),
-        discountedPrice: parseFloat(discounted_price),
+        condition: !isNearExpiry ? condition.trim() : null,
+        originalPrice: origNum,
+        discountedPrice: discNum,
         discountPct: pct,
-        quantity: parseInt(quantity),
-        expiryDate: new Date(expiry_date),
+        quantity: qty,
+        expiryDate: isNearExpiry ? new Date(expiry_date) : null,
         city: city.trim(),
         region: region?.trim() || null,
         address: address?.trim() || null,
@@ -132,7 +158,7 @@ export async function POST(req: NextRequest) {
 
     return ok({
       ...listing,
-      originalPrice: listing.originalPrice.toString(),
+      originalPrice: listing.originalPrice?.toString() ?? null,
       discountedPrice: listing.discountedPrice.toString(),
       discountPct: listing.discountPct.toString(),
     }, 201)

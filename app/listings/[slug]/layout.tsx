@@ -12,6 +12,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       discountedPrice: true,
       originalPrice: true,
       discountPct: true,
+      listingType: true,
+      condition: true,
       city: true,
       region: true,
       expiryDate: true,
@@ -29,15 +31,24 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     return { title: 'Listing Not Found', robots: { index: false } }
   }
 
-  if (listing.status === 'expired' || new Date(listing.expiryDate) < new Date()) {
+  const isExpired = listing.status === 'expired' ||
+    (listing.listingType === 'near_expiry' && listing.expiryDate && new Date(listing.expiryDate) < new Date())
+  if (isExpired) {
     return { title: listing.title, robots: { index: false } }
   }
 
-  const discount = Math.round(Number(listing.discountPct))
   const price = Number(listing.discountedPrice).toLocaleString('en-BD')
   const location = [listing.city, listing.region].filter(Boolean).join(', ')
-  const title = `${listing.title} — ৳${price} (${discount}% off) in ${location}`
-  const description = `${listing.category?.name ?? 'Product'} near expiry at ${discount}% discount. ৳${price} in ${location}. ${listing.description.slice(0, 120)}...`
+  const discount = Math.round(Number(listing.discountPct))
+
+  const title = listing.listingType === 'near_expiry'
+    ? `${listing.title} — ৳${price} (${discount}% off) in ${location}`
+    : `${listing.title} — ৳${price} in ${location}`
+
+  const description = listing.listingType === 'near_expiry'
+    ? `${listing.category?.name ?? 'Product'} near expiry at ${discount}% discount. ৳${price} in ${location}. ${listing.description.slice(0, 120)}...`
+    : `${listing.condition ?? (listing.listingType === 'new_item' ? 'New' : 'Used')} ${listing.category?.name ?? 'item'} for ৳${price} in ${location}. ${listing.description.slice(0, 120)}...`
+
   const image = listing.photos[0]?.urlMedium
 
   return {
@@ -47,7 +58,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       title,
       description,
       url: `${BASE_URL}/listings/${params.slug}`,
-      siteName: 'ExpiryDeals',
+      siteName: 'ExpiryDealsBD',
       type: 'website',
       images: image ? [{ url: image, width: 800, height: 600, alt: listing.title }] : [],
     },
@@ -75,6 +86,7 @@ export default async function ListingLayout({
       discountedPrice: true,
       originalPrice: true,
       expiryDate: true,
+      listingType: true,
       status: true,
       city: true,
       region: true,
@@ -83,7 +95,8 @@ export default async function ListingLayout({
     },
   })
 
-  const isActive = listing && listing.status === 'active' && new Date(listing.expiryDate) >= new Date()
+  const isActive = !!listing && listing.status === 'active' &&
+    (listing.listingType !== 'near_expiry' || (listing.expiryDate && new Date(listing.expiryDate) >= new Date()))
 
   const jsonLd = isActive ? {
     '@context': 'https://schema.org',
@@ -97,11 +110,15 @@ export default async function ListingLayout({
       price: Number(listing.discountedPrice).toFixed(2),
       priceCurrency: 'BDT',
       availability: 'https://schema.org/InStock',
-      priceValidUntil: listing.expiryDate.toISOString().split('T')[0],
-      itemCondition: 'https://schema.org/NewCondition',
+      ...(listing.listingType === 'near_expiry' && listing.expiryDate
+        ? { priceValidUntil: listing.expiryDate.toISOString().split('T')[0] }
+        : {}),
+      itemCondition: listing.listingType === 'used_item'
+        ? 'https://schema.org/UsedCondition'
+        : 'https://schema.org/NewCondition',
       seller: {
         '@type': 'LocalBusiness',
-        name: 'ExpiryDeals Seller',
+        name: 'ExpiryDealsBD Seller',
         addressLocality: listing.city,
         addressRegion: listing.region ?? undefined,
         addressCountry: 'BD',

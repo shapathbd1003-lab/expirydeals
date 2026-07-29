@@ -5,21 +5,6 @@ import { ListingCard } from '@/components/ListingCard'
 import { useLang } from '@/hooks/useLang'
 import { useAuth } from '@/hooks/useAuth'
 
-const CATEGORY_ICONS: Record<string, string> = {
-  'food-groceries': '🥫',
-  'beverages': '🥤',
-  'dairy-eggs': '🥛',
-  'meat-seafood': '🥩',
-  'bakery-snacks': '🍞',
-  'pharmaceuticals': '💊',
-  'health-wellness': '🌿',
-  'baby-kids': '👶',
-  'cosmetics-beauty': '💄',
-  'cleaning-products': '🧹',
-  'pet-supplies': '🐾',
-  'other': '📦',
-}
-
 const CATEGORY_NAMES_BN: Record<string, string> = {
   'food-groceries': 'খাদ্য ও মুদিপণ্য',
   'beverages': 'পানীয়',
@@ -33,7 +18,22 @@ const CATEGORY_NAMES_BN: Record<string, string> = {
   'cleaning-products': 'পরিষ্কার পণ্য',
   'pet-supplies': 'পোষা প্রাণীর সামগ্রী',
   'other': 'অন্যান্য',
+  'mobile-tablets': 'মোবাইল ও ট্যাবলেট',
+  'electronics': 'ইলেকট্রনিক্স',
+  'furniture-home': 'ফার্নিচার ও হোম',
+  'vehicles': 'যানবাহন',
+  'fashion-clothing': 'ফ্যাশন ও পোশাক',
+  'books-hobbies': 'বই ও শখ',
+  'sports-outdoor': 'খেলাধুলা ও আউটডোর',
+  'property': 'সম্পত্তি',
+  'other-general': 'অন্যান্য পণ্য',
 }
+
+const TYPE_TABS = [
+  { value: 'near_expiry', en: '⏰ Near Expiry', bn: '⏰ মেয়াদ শেষ হওয়ার কাছাকাছি' },
+  { value: 'new_item', en: '✨ New', bn: '✨ নতুন' },
+  { value: 'used_item', en: '♻️ Used', bn: '♻️ ব্যবহৃত' },
+] as const
 
 const T = {
   en: {
@@ -116,6 +116,7 @@ export default function HomePage() {
   const { lang } = useLang()
   const { user } = useAuth()
   const t = T[lang]
+  const [activeType, setActiveType] = useState<'near_expiry' | 'new_item' | 'used_item'>('near_expiry')
   const [rawFeatured, setRawFeatured] = useState<any>({ just_added: [], expiring_soon: [] })
   const [categories, setCategories] = useState<any[]>([])
   const [stats, setStats] = useState<any>(null)
@@ -123,16 +124,23 @@ export default function HomePage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/listings/featured').then(r => r.json()).catch(() => ({ data: null })),
       fetch('/api/categories').then(r => r.json()).catch(() => ({ data: [] })),
       fetch('/api/stats/public').then(r => r.json()).catch(() => ({ data: null })),
-    ]).then(([feat, cats, st]) => {
-      setRawFeatured(feat.data || { just_added: [], expiring_soon: [] })
+    ]).then(([cats, st]) => {
       setCategories(cats.data || [])
       setStats(st.data || null)
-      setLoading(false)
     })
   }, [])
+
+  // Fetch featured listings for the selected type tab (runs on mount and on tab change)
+  useEffect(() => {
+    setLoading(true)
+    fetch(`/api/listings/featured?type=${activeType}`)
+      .then(r => r.json())
+      .then(d => setRawFeatured(d.data || { just_added: [], expiring_soon: [] }))
+      .catch(() => setRawFeatured({ just_added: [], expiring_soon: [] }))
+      .finally(() => setLoading(false))
+  }, [activeType])
 
   // Hide the viewer's own listings (API responses are shared/cached, so filter here)
   const notMine = (l: any) => !user || l.seller_id !== user.id
@@ -140,6 +148,7 @@ export default function HomePage() {
     just_added: (rawFeatured.just_added || []).filter(notMine),
     expiring_soon: (rawFeatured.expiring_soon || []).filter(notMine),
   }
+  const categoriesForType = categories.filter((c: any) => c.group === (activeType === 'near_expiry' ? 'near_expiry' : 'general'))
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -160,6 +169,7 @@ export default function HomePage() {
 
           {/* Search form */}
           <form action="/listings" className="flex max-w-2xl mx-auto bg-white rounded-xl overflow-hidden shadow-xl mb-6">
+            <input type="hidden" name="type" value={activeType} />
             <input
               name="q"
               type="search"
@@ -168,7 +178,7 @@ export default function HomePage() {
             />
             <select name="category" className="hidden sm:block border-l border-gray-200 px-3 py-3.5 text-sm text-gray-600 outline-none bg-white">
               <option value="">{t.allCategories}</option>
-              {categories.map((c: any) => (
+              {categoriesForType.map((c: any) => (
                 <option key={c.id} value={c.slug}>{c.name}</option>
               ))}
             </select>
@@ -179,7 +189,7 @@ export default function HomePage() {
 
           {/* CTA buttons */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/listings" className="bg-white text-orange-600 font-bold px-6 py-3 rounded-xl hover:bg-orange-50 transition text-sm shadow">
+            <Link href={`/listings?type=${activeType}`} className="bg-white text-orange-600 font-bold px-6 py-3 rounded-xl hover:bg-orange-50 transition text-sm shadow">
               {t.browseDeal}
             </Link>
             <Link href="/seller/listings/new" className="bg-orange-700 hover:bg-orange-800 text-white font-bold px-6 py-3 rounded-xl transition text-sm shadow">
@@ -207,21 +217,33 @@ export default function HomePage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
 
+        {/* Listing type tabs */}
+        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+          {TYPE_TABS.map(tt => (
+            <button key={tt.value} onClick={() => setActiveType(tt.value)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                activeType === tt.value ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
+              }`}>
+              {lang === 'bn' ? tt.bn : tt.en}
+            </button>
+          ))}
+        </div>
+
         {/* Categories grid */}
-        {categories.length > 0 && (
+        {categoriesForType.length > 0 && (
           <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-bold text-gray-800 text-base">{t.browseByCategory}</h2>
-              <Link href="/listings" className="text-xs text-orange-600 hover:underline">{t.viewAll}</Link>
+              <Link href={`/listings?type=${activeType}`} className="text-xs text-orange-600 hover:underline">{t.viewAll}</Link>
             </div>
             <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-6 gap-2">
-              {categories.map((cat: any) => (
+              {categoriesForType.map((cat: any) => (
                 <Link
                   key={cat.id}
-                  href={`/listings?category=${cat.slug}`}
+                  href={`/listings?type=${activeType}&category=${cat.slug}`}
                   className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl hover:bg-orange-50 border border-transparent hover:border-orange-200 transition text-center group"
                 >
-                  <span className="text-2xl">{CATEGORY_ICONS[cat.slug] || '📦'}</span>
+                  <span className="text-2xl">{cat.icon || '📦'}</span>
                   <span className="text-xs text-gray-700 group-hover:text-orange-700 font-medium leading-tight">
                     {lang === 'bn' ? (CATEGORY_NAMES_BN[cat.slug] || cat.name) : cat.name}
                   </span>
@@ -250,7 +272,7 @@ export default function HomePage() {
                     <span className="w-1 h-5 bg-red-500 rounded inline-block"></span>
                     {t.expiringSoon}
                   </h2>
-                  <Link href="/listings?sort=expiry_asc" className="text-xs text-orange-600 hover:underline">{t.seeAll}</Link>
+                  <Link href={`/listings?type=${activeType}&sort=expiry_asc`} className="text-xs text-orange-600 hover:underline">{t.seeAll}</Link>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                   {featured.expiring_soon.map((l: any) => <ListingCard key={l.id} listing={l} />)}
@@ -266,7 +288,7 @@ export default function HomePage() {
                     <span className="w-1 h-5 bg-orange-500 rounded inline-block"></span>
                     {t.justAdded}
                   </h2>
-                  <Link href="/listings?sort=newest" className="text-xs text-orange-600 hover:underline">{t.seeAll}</Link>
+                  <Link href={`/listings?type=${activeType}&sort=newest`} className="text-xs text-orange-600 hover:underline">{t.seeAll}</Link>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                   {featured.just_added.map((l: any) => <ListingCard key={l.id} listing={l} />)}

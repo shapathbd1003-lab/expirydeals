@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
     const result = await prisma.listing.updateMany({
       where: {
         status: { in: ['active', 'paused'] },
+        listingType: 'near_expiry', // new/used listings have no expiry date
         expiryDate: { lt: new Date() },
       },
       data: { status: 'expired' },

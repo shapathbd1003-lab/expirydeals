@@ -11,7 +11,7 @@ const T = {
   en: {
     home: 'Home', listings: 'Listings',
     expired: 'This listing has expired.', browseActive: 'Browse Active Listings',
-    quantity: 'Quantity', expires: 'Expires', category: 'Category', views: 'views', posted: 'Posted',
+    quantity: 'Quantity', expires: 'Expires', category: 'Category', views: 'views', posted: 'Posted', condition: 'Condition',
     description: 'Description', location: 'Location', viewOnMaps: 'View on Google Maps',
     safetyTips: '⚠️ Safety Tips',
     safety1: 'Meet in a safe, public place to inspect the product before buying.',
@@ -38,7 +38,7 @@ const T = {
   bn: {
     home: 'হোম', listings: 'বিজ্ঞাপন',
     expired: 'এই বিজ্ঞাপনের মেয়াদ শেষ হয়ে গেছে।', browseActive: 'সক্রিয় বিজ্ঞাপন দেখুন',
-    quantity: 'পরিমাণ', expires: 'মেয়াদ', category: 'ক্যাটাগরি', views: 'ভিউ', posted: 'পোস্ট',
+    quantity: 'পরিমাণ', expires: 'মেয়াদ', category: 'ক্যাটাগরি', views: 'ভিউ', posted: 'পোস্ট', condition: 'কন্ডিশন',
     description: 'বিবরণ', location: 'অবস্থান', viewOnMaps: 'গুগল ম্যাপে দেখুন',
     safetyTips: '⚠️ নিরাপত্তা টিপস',
     safety1: 'পণ্য কেনার আগে নিরাপদ, পাবলিক জায়গায় পরীক্ষা করুন।',
@@ -190,6 +190,7 @@ export default function ListingDetailPage() {
   )
 
   const fullLocation = [listing.address, listing.city, listing.region].filter(Boolean).join(', ')
+  const isNearExpiry = !listing.listing_type || listing.listing_type === 'near_expiry'
 
   return (
     <div className="bg-gray-100 min-h-screen">
@@ -255,10 +256,18 @@ export default function ListingDetailPage() {
                 </button>
               </div>
 
-              <div className="flex items-baseline gap-3 mb-3">
+              <div className="flex items-baseline gap-3 mb-3 flex-wrap">
                 <span className="text-2xl font-bold text-orange-600">৳ {parseFloat(listing.discountedPrice).toLocaleString('en-BD')}</span>
-                <span className="text-base text-gray-400 line-through">৳ {parseFloat(listing.originalPrice).toLocaleString('en-BD')}</span>
-                <ExpiryBadge days={listing.days_remaining} lang={lang} />
+                {listing.originalPrice && (
+                  <span className="text-base text-gray-400 line-through">৳ {parseFloat(listing.originalPrice).toLocaleString('en-BD')}</span>
+                )}
+                {isNearExpiry && listing.days_remaining != null ? (
+                  <ExpiryBadge days={listing.days_remaining} lang={lang} />
+                ) : !isNearExpiry ? (
+                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${listing.listing_type === 'new_item' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                    {listing.condition || (listing.listing_type === 'new_item' ? 'Brand New' : 'Used')}
+                  </span>
+                ) : null}
               </div>
 
               {/* Key details row — Bikroy style */}
@@ -267,10 +276,17 @@ export default function ListingDetailPage() {
                   <span className="text-gray-400">📦</span>
                   <span>{t.quantity}: <strong>{listing.quantity}</strong></span>
                 </div>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <span className="text-gray-400">📅</span>
-                  <span>{t.expires}: <strong>{formatDate(listing.expiryDate)}</strong></span>
-                </div>
+                {isNearExpiry ? (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <span className="text-gray-400">📅</span>
+                    <span>{t.expires}: <strong>{formatDate(listing.expiryDate)}</strong></span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <span className="text-gray-400">🏷️</span>
+                    <span>{t.condition}: <strong>{listing.condition}</strong></span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 text-gray-600">
                   <span className="text-gray-400">🏷️</span>
                   <span>{t.category}: <strong>{listing.category?.name}</strong></span>
@@ -402,7 +418,11 @@ export default function ListingDetailPage() {
                 <tbody className="divide-y divide-gray-100">
                   <tr><td className="py-1.5 text-gray-400">{t.adId}</td><td className="py-1.5 font-mono text-right">{listing.id?.slice(0, 8).toUpperCase()}</td></tr>
                   <tr><td className="py-1.5 text-gray-400">{t.adPosted}</td><td className="py-1.5 text-right">{formatDate(listing.createdAt)}</td></tr>
-                  <tr><td className="py-1.5 text-gray-400">{t.adExpiry}</td><td className="py-1.5 text-right">{formatDate(listing.expiryDate)}</td></tr>
+                  {isNearExpiry ? (
+                    <tr><td className="py-1.5 text-gray-400">{t.adExpiry}</td><td className="py-1.5 text-right">{formatDate(listing.expiryDate)}</td></tr>
+                  ) : (
+                    <tr><td className="py-1.5 text-gray-400">{t.condition}</td><td className="py-1.5 text-right">{listing.condition}</td></tr>
+                  )}
                   <tr><td className="py-1.5 text-gray-400">{t.adViews}</td><td className="py-1.5 text-right">{listing.viewCount}</td></tr>
                   <tr>
                     <td className="py-1.5 text-gray-400">Location</td>

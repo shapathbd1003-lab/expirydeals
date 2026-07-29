@@ -109,7 +109,14 @@ function AdminListingsContent() {
                         <Link href={`/listings/${l.slug}`} className="font-medium text-gray-900 hover:text-orange-600 line-clamp-1">
                           {l.title}
                         </Link>
-                        <p className="text-xs text-gray-400">{l.category?.name}</p>
+                        <p className="text-xs text-gray-400 flex items-center gap-1">
+                          {l.category?.name}
+                          {l.listingType && l.listingType !== 'near_expiry' && (
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${l.listingType === 'new_item' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                              {l.listingType === 'new_item' ? 'New' : 'Used'}
+                            </span>
+                          )}
+                        </p>
                       </div>
                     </div>
                   </td>

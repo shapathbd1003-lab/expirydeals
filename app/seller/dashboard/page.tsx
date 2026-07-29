@@ -118,9 +118,15 @@ export default function SellerDashboard() {
                   <div className="flex items-center gap-3 text-xs text-gray-500 flex-shrink-0">
                     <span>👁 {l.viewCount}</span>
                     <span>📞 {l.contactCount}</span>
-                    <span className={l.days_remaining <= 3 ? 'text-red-500 font-medium' : ''}>
-                      {daysLeft(l.expiryDate)}
-                    </span>
+                    {(!l.listingType || l.listingType === 'near_expiry') ? (
+                      <span className={l.days_remaining != null && l.days_remaining <= 3 ? 'text-red-500 font-medium' : ''}>
+                        {daysLeft(l.expiryDate)}
+                      </span>
+                    ) : (
+                      <span className={`px-1.5 py-0.5 rounded font-medium ${l.listingType === 'new_item' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                        {l.listingType === 'new_item' ? 'New' : 'Used'}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-2 mt-2">
