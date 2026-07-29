@@ -2,6 +2,10 @@ import { prisma } from '@/lib/prisma'
 import { okCached, serverError } from '@/lib/response'
 import { daysRemaining, startOfToday } from '@/lib/slugify'
 
+// Force per-request execution — without this, Next.js statically freezes the
+// response (and "today") at build/deploy time since no dynamic APIs are read.
+export const dynamic = 'force-dynamic'
+
 const LISTING_CARD = {
   id: true, slug: true, title: true, sellerId: true,
   originalPrice: true, discountedPrice: true, discountPct: true,

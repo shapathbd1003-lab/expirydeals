@@ -2,6 +2,8 @@ import { MetadataRoute } from 'next'
 import { prisma } from '@/lib/prisma'
 import { startOfToday } from '@/lib/slugify'
 
+export const revalidate = 3600 // regenerate hourly so new/expired listings stay current
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.expirydealsbd.com'
 
