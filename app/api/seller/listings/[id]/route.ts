@@ -50,7 +50,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     if (body.title !== undefined) updateData.title = body.title.trim()
     if (body.description !== undefined) {
-      if (body.description.length < 30) return validationError('description must be at least 30 characters')
+      if (body.description.length < 15) return validationError('description must be at least 15 characters')
       updateData.description = body.description.trim()
     }
     if (body.condition !== undefined) updateData.condition = body.condition?.trim() || null

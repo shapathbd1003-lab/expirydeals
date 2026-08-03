@@ -27,6 +27,15 @@ const CATEGORY_NAMES_BN: Record<string, string> = {
   'sports-outdoor': 'খেলাধুলা ও আউটডোর',
   'property': 'সম্পত্তি',
   'other-general': 'অন্যান্য পণ্য',
+  'frozen-foods': 'হিমায়িত খাবার',
+  'condiments-spices': 'মসলা ও সস',
+  'personal-care': 'ব্যক্তিগত যত্ন',
+  'computers-laptops': 'কম্পিউটার ও ল্যাপটপ',
+  'home-appliances': 'গৃহস্থালী যন্ত্রপাতি',
+  'kids-baby': 'শিশু ও বাচ্চা সামগ্রী',
+  'jewelry-watches': 'গহনা ও ঘড়ি',
+  'musical-instruments': 'বাদ্যযন্ত্র',
+  'tools-industrial': 'টুলস ও শিল্প সরঞ্জাম',
 }
 
 const TYPE_TABS = [

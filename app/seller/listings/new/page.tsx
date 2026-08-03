@@ -2,20 +2,93 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
+import { useLang } from '@/hooks/useLang'
 import Link from 'next/link'
 import { LocationPicker } from '@/components/LocationPicker'
 
+const MIN_DESCRIPTION_LENGTH = 15
+
 const LISTING_TYPES = [
-  { value: 'near_expiry', label: '⏰ Near Expiry', desc: 'Food, medicine & products nearing expiry' },
-  { value: 'new_item', label: '✨ New Product', desc: 'Brand new, unused item' },
-  { value: 'used_item', label: '♻️ Used Product', desc: 'Pre-owned item in working condition' },
+  { value: 'near_expiry', icon: '⏰', en: 'Near Expiry', bn: 'মেয়াদ শেষ হওয়ার কাছাকাছি', descEn: 'Food, medicine & products nearing expiry', descBn: 'খাবার, ওষুধ ও মেয়াদ শেষ হওয়ার কাছাকাছি পণ্য' },
+  { value: 'new_item', icon: '✨', en: 'New Product', bn: 'নতুন পণ্য', descEn: 'Brand new, unused item', descBn: 'একদম নতুন, অব্যবহৃত পণ্য' },
+  { value: 'used_item', icon: '♻️', en: 'Used Product', bn: 'ব্যবহৃত পণ্য', descEn: 'Pre-owned item in working condition', descBn: 'ব্যবহৃত কিন্তু সচল অবস্থায় থাকা পণ্য' },
+] as const
+
+const NEW_CONDITIONS = [
+  { en: 'Brand New (Sealed)', bn: 'একদম নতুন (সিলড)' },
+  { en: 'Brand New (Box Opened)', bn: 'একদম নতুন (বক্স খোলা)' },
+  { en: 'Refurbished', bn: 'রিফার্বিশড' },
+]
+const USED_CONDITIONS = [
+  { en: 'Like New', bn: 'নতুনের মতো' },
+  { en: 'Good', bn: 'ভালো' },
+  { en: 'Fair', bn: 'মোটামুটি' },
+  { en: 'For Parts', bn: 'পার্টসের জন্য' },
 ]
 
-const NEW_CONDITIONS = ['Brand New (Sealed)', 'Brand New (Box Opened)', 'Refurbished']
-const USED_CONDITIONS = ['Like New', 'Good', 'Fair', 'For Parts']
+const T = {
+  en: {
+    back: '← Back', title: 'Create New Listing',
+    steps: ['Details', 'Pricing', 'Location & Photos'],
+    productDetails: 'Product Details',
+    productName: 'Product Name', category: 'Category', selectCategory: 'Select category...',
+    description: 'Description',
+    descPlaceholder: 'Describe the product: brand, quantity/condition, your full pickup address (house/road/area/landmark), phone number etc.',
+    descCounter: (n: number) => `${n}/${MIN_DESCRIPTION_LENGTH} — write ${MIN_DESCRIPTION_LENGTH - n} more characters`,
+    descOk: (n: number) => `✓ ${n} characters`,
+    next: 'Next →', back2: '← Back',
+    errName: 'Please enter a product name.', errCategory: 'Please select a category.',
+    errDesc: (n: number) => `Description too short — write ${n} more characters.`,
+    pricingStock: 'Pricing & Stock',
+    origPrice: 'Original Price (৳)', origPriceOptional: 'Original / MRP Price (৳)', optional: '(optional)',
+    price: 'Price (৳)', discPrice: 'Discounted Price (৳)',
+    discountMsg: (n: number) => `🎉 That's a ${n}% discount!`,
+    quantity: 'Quantity Available', expiryDate: 'Expiry Date', condition: 'Condition', selectCondition: 'Select condition...',
+    errFields: 'Please fill all required fields',
+    errPriceExpiry: 'Discounted price must be less than original price',
+    errPriceGeneral: 'Price must be less than original/MRP price',
+    locationPhotos: 'Location & Photos', photos: 'Photos', photosOptional: '(optional — up to 8)',
+    uploadDevice: '📁 Upload from device', pasteUrl: '🔗 Paste image URL', addPhoto: 'Add photo',
+    photoCount: (n: number) => `${n}/8 photos · JPG, PNG, WebP · max 10 MB each`,
+    urlHint: 'Paste links to images already online (e.g. from Google, Facebook, or any website)',
+    urlPlaceholder: (i: number) => `Image URL ${i} — paste a link starting with https://`,
+    addAnotherUrl: '+ Add another URL',
+    saveDraft: 'Save Draft', submitReview: '📋 Submit for Review', submitting: 'Submitting...',
+  },
+  bn: {
+    back: '← ফিরে যান', title: 'নতুন বিজ্ঞাপন তৈরি করুন',
+    steps: ['বিবরণ', 'মূল্য', 'অবস্থান ও ছবি'],
+    productDetails: 'পণ্যের বিবরণ',
+    productName: 'পণ্যের নাম', category: 'ক্যাটাগরি', selectCategory: 'ক্যাটাগরি নির্বাচন করুন...',
+    description: 'বর্ণনা',
+    descPlaceholder: 'পণ্যের বর্ণনা দিন: ব্র্যান্ড, পরিমাণ/অবস্থা, আপনার সম্পূর্ণ পিকআপ ঠিকানা (বাড়ি/রোড/এলাকা/ল্যান্ডমার্ক), ফোন নম্বর ইত্যাদি।',
+    descCounter: (n: number) => `${n}/${MIN_DESCRIPTION_LENGTH} — আরও ${MIN_DESCRIPTION_LENGTH - n}টি অক্ষর লিখুন`,
+    descOk: (n: number) => `✓ ${n} অক্ষর`,
+    next: 'পরবর্তী →', back2: '← পেছনে',
+    errName: 'পণ্যের নাম লিখুন।', errCategory: 'একটি ক্যাটাগরি নির্বাচন করুন।',
+    errDesc: (n: number) => `বর্ণনা খুব ছোট — আরও ${n}টি অক্ষর লিখুন।`,
+    pricingStock: 'মূল্য ও স্টক',
+    origPrice: 'আসল মূল্য (৳)', origPriceOptional: 'আসল / এমআরপি মূল্য (৳)', optional: '(ঐচ্ছিক)',
+    price: 'মূল্য (৳)', discPrice: 'ছাড়ের মূল্য (৳)',
+    discountMsg: (n: number) => `🎉 এটি ${n}% ছাড়!`,
+    quantity: 'উপলব্ধ পরিমাণ', expiryDate: 'মেয়াদ শেষের তারিখ', condition: 'অবস্থা', selectCondition: 'অবস্থা নির্বাচন করুন...',
+    errFields: 'সব প্রয়োজনীয় ঘর পূরণ করুন',
+    errPriceExpiry: 'ছাড়ের মূল্য আসল মূল্যের চেয়ে কম হতে হবে',
+    errPriceGeneral: 'মূল্য আসল/এমআরপি মূল্যের চেয়ে কম হতে হবে',
+    locationPhotos: 'অবস্থান ও ছবি', photos: 'ছবি', photosOptional: '(ঐচ্ছিক — সর্বোচ্চ ৮টি)',
+    uploadDevice: '📁 ডিভাইস থেকে আপলোড', pasteUrl: '🔗 ছবির লিংক পেস্ট করুন', addPhoto: 'ছবি যোগ করুন',
+    photoCount: (n: number) => `${n}/৮ ছবি · JPG, PNG, WebP · সর্বোচ্চ ১০ MB প্রতিটি`,
+    urlHint: 'ইতিমধ্যে অনলাইনে থাকা ছবির লিংক পেস্ট করুন (যেমন Google, Facebook, বা যেকোনো ওয়েবসাইট থেকে)',
+    urlPlaceholder: (i: number) => `ছবির লিংক ${i} — https:// দিয়ে শুরু হওয়া একটি লিংক পেস্ট করুন`,
+    addAnotherUrl: '+ আরেকটি লিংক যোগ করুন',
+    saveDraft: 'খসড়া সংরক্ষণ করুন', submitReview: '📋 পর্যালোচনার জন্য জমা দিন', submitting: 'জমা হচ্ছে...',
+  },
+}
 
 export default function NewListingPage() {
   const { user, token, loading: authLoading } = useAuth()
+  const { lang } = useLang()
+  const t = T[lang]
   const router = useRouter()
   const [categories, setCategories] = useState<any[]>([])
   const [listingType, setListingType] = useState<'near_expiry' | 'new_item' | 'used_item'>('near_expiry')
@@ -24,7 +97,7 @@ export default function NewListingPage() {
     original_price: '', discounted_price: '', condition: '',
     quantity: '', expiry_date: '', city: '', region: '', address: '',
   })
-  const [location, setLocation] = useState({ division: '', district: '', upazila: '', address: '' })
+  const [location, setLocation] = useState({ division: '', district: '', address: '' })
   const [photos, setPhotos] = useState<File[]>([])
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([])
   const [imageUrls, setImageUrls] = useState<string[]>([''])
@@ -46,8 +119,8 @@ export default function NewListingPage() {
   }, [])
 
   // Reset category and type-specific fields when switching listing type
-  const changeType = (t: typeof listingType) => {
-    setListingType(t)
+  const changeType = (ty: typeof listingType) => {
+    setListingType(ty)
     setForm(f => ({ ...f, category_id: '', condition: '', expiry_date: '', original_price: '' }))
   }
 
@@ -83,7 +156,7 @@ export default function NewListingPage() {
           listing_type: listingType,
           city: location.district,
           region: location.division,
-          address: [location.upazila, location.address].filter(Boolean).join(', '),
+          address: location.address,
           status: publish ? 'pending' : 'draft',
         }),
       })
@@ -127,32 +200,31 @@ export default function NewListingPage() {
     ? Math.round((1 - parseFloat(form.discounted_price) / parseFloat(form.original_price)) * 100)
     : 0
 
-  const totalImages = photoTab === 'upload' ? photos.length : validImageUrls.length
   const canPublish = !loading && !!location.district
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/my/listings" className="text-gray-400 hover:text-gray-600">← Back</Link>
-        <h1 className="text-xl font-bold text-gray-900">Create New Listing</h1>
+        <Link href="/my/listings" className="text-gray-400 hover:text-gray-600">{t.back}</Link>
+        <h1 className="text-xl font-bold text-gray-900">{t.title}</h1>
       </div>
 
       {/* Listing type selector — always visible, switching resets type-specific fields */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-6">
-        {LISTING_TYPES.map(t => (
-          <button key={t.value} type="button" onClick={() => changeType(t.value as typeof listingType)}
+        {LISTING_TYPES.map(lt => (
+          <button key={lt.value} type="button" onClick={() => changeType(lt.value)}
             className={`text-left p-3 rounded-xl border-2 transition ${
-              listingType === t.value ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white hover:border-gray-300'
+              listingType === lt.value ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white hover:border-gray-300'
             }`}>
-            <p className="font-semibold text-sm text-gray-900">{t.label}</p>
-            <p className="text-xs text-gray-500 mt-0.5">{t.desc}</p>
+            <p className="font-semibold text-sm text-gray-900">{lt.icon} {lang === 'bn' ? lt.bn : lt.en}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{lang === 'bn' ? lt.descBn : lt.descEn}</p>
           </button>
         ))}
       </div>
 
       {/* Steps indicator */}
       <div className="flex gap-2 mb-8">
-        {['Details', 'Pricing', 'Location & Photos'].map((s, i) => (
+        {t.steps.map((s, i) => (
           <div key={s} className="flex items-center gap-2 flex-1">
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
               step > i + 1 ? 'bg-orange-500 text-white' : step === i + 1 ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-500'
@@ -168,121 +240,121 @@ export default function NewListingPage() {
       <div className="bg-white rounded-2xl border border-gray-100 p-6">
         {step === 1 && (
           <div className="space-y-4">
-            <h2 className="font-semibold text-gray-900">Product Details</h2>
+            <h2 className="font-semibold text-gray-900">{t.productDetails}</h2>
             <div>
-              <label htmlFor="new-title" className="label">Product Name <span className="text-red-500">*</span></label>
+              <label htmlFor="new-title" className="label">{t.productName} <span className="text-red-500">*</span></label>
               <input id="new-title" className="input" required value={form.title} onChange={e => setForm({...form, title: e.target.value})} />
             </div>
             <div>
-              <label htmlFor="new-category" className="label">Category <span className="text-red-500">*</span></label>
+              <label htmlFor="new-category" className="label">{t.category} <span className="text-red-500">*</span></label>
               <select id="new-category" className="input" required value={form.category_id} onChange={e => setForm({...form, category_id: e.target.value})}>
-                <option value="">Select category...</option>
-                {categoriesForType.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                <option value="">{t.selectCategory}</option>
+                {categoriesForType.map((c: any) => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
               </select>
             </div>
             <div>
-              <label htmlFor="new-desc" className="label">Description <span className="text-red-500">*</span></label>
+              <label htmlFor="new-desc" className="label">{t.description} <span className="text-red-500">*</span></label>
               <textarea id="new-desc" className="input resize-none" rows={4} required
-                placeholder="Describe the product: brand, quantity, condition, pickup details, phone number etc."
+                placeholder={t.descPlaceholder}
                 value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
-              <p className={`text-xs mt-1 ${form.description.length < 30 ? 'text-orange-500' : 'text-orange-600'}`}>
-                {form.description.length < 30
-                  ? `${form.description.length}/30 — write ${30 - form.description.length} more characters`
-                  : `✓ ${form.description.length} characters`}
+              <p className={`text-xs mt-1 ${form.description.length < MIN_DESCRIPTION_LENGTH ? 'text-orange-500' : 'text-orange-600'}`}>
+                {form.description.length < MIN_DESCRIPTION_LENGTH
+                  ? t.descCounter(form.description.length)
+                  : t.descOk(form.description.length)}
               </p>
             </div>
             <button onClick={() => {
-              if (!form.title || !form.category_id || form.description.length < 30) {
+              if (!form.title || !form.category_id || form.description.length < MIN_DESCRIPTION_LENGTH) {
                 setError(
-                  !form.title ? 'Please enter a product name.' :
-                  !form.category_id ? 'Please select a category.' :
-                  `Description too short — write ${30 - form.description.length} more characters.`
+                  !form.title ? t.errName :
+                  !form.category_id ? t.errCategory :
+                  t.errDesc(MIN_DESCRIPTION_LENGTH - form.description.length)
                 )
                 return
               }
               setError(''); setStep(2)
-            }} className="btn-primary w-full">Next →</button>
+            }} className="btn-primary w-full">{t.next}</button>
           </div>
         )}
 
         {step === 2 && (
           <div className="space-y-4">
-            <h2 className="font-semibold text-gray-900">Pricing & Stock</h2>
+            <h2 className="font-semibold text-gray-900">{t.pricingStock}</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="new-orig-price" className="label">
-                  {isNearExpiry ? <>Original Price (৳) <span className="text-red-500">*</span></> : <>Original / MRP Price (৳) <span className="text-gray-400 font-normal">(optional)</span></>}
+                  {isNearExpiry ? <>{t.origPrice} <span className="text-red-500">*</span></> : <>{t.origPriceOptional} <span className="text-gray-400 font-normal">{t.optional}</span></>}
                 </label>
                 <input id="new-orig-price" type="number" min="0.01" step="0.01" className="input" required={isNearExpiry}
                   value={form.original_price} onChange={e => setForm({...form, original_price: e.target.value})} />
               </div>
               <div>
-                <label htmlFor="new-disc-price" className="label">{isNearExpiry ? 'Discounted Price (৳)' : 'Price (৳)'} <span className="text-red-500">*</span></label>
+                <label htmlFor="new-disc-price" className="label">{isNearExpiry ? t.discPrice : t.price} <span className="text-red-500">*</span></label>
                 <input id="new-disc-price" type="number" min="0.01" step="0.01" className="input" required
                   value={form.discounted_price} onChange={e => setForm({...form, discounted_price: e.target.value})} />
               </div>
             </div>
             {discount > 0 && (
               <div className="bg-orange-50 text-orange-700 text-sm px-4 py-2 rounded-lg">
-                🎉 That&apos;s a <strong>{discount}% discount</strong>!
+                {t.discountMsg(discount)}
               </div>
             )}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="new-qty" className="label">Quantity Available <span className="text-red-500">*</span></label>
+                <label htmlFor="new-qty" className="label">{t.quantity} <span className="text-red-500">*</span></label>
                 <input id="new-qty" type="number" min="1" className="input" required
                   value={form.quantity} onChange={e => setForm({...form, quantity: e.target.value})} />
               </div>
               {isNearExpiry ? (
                 <div>
-                  <label htmlFor="new-expiry" className="label">Expiry Date <span className="text-red-500">*</span></label>
+                  <label htmlFor="new-expiry" className="label">{t.expiryDate} <span className="text-red-500">*</span></label>
                   <input id="new-expiry" type="date" className="input" required min={new Date().toISOString().split('T')[0]}
                     value={form.expiry_date} onChange={e => setForm({...form, expiry_date: e.target.value})} />
                 </div>
               ) : (
                 <div>
-                  <label htmlFor="new-condition" className="label">Condition <span className="text-red-500">*</span></label>
+                  <label htmlFor="new-condition" className="label">{t.condition} <span className="text-red-500">*</span></label>
                   <select id="new-condition" className="input" required
                     value={form.condition} onChange={e => setForm({...form, condition: e.target.value})}>
-                    <option value="">Select condition...</option>
-                    {conditionOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                    <option value="">{t.selectCondition}</option>
+                    {conditionOptions.map(c => <option key={c.en} value={c.en}>{lang === 'bn' ? c.bn : c.en}</option>)}
                   </select>
                 </div>
               )}
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setStep(1)} className="btn-secondary flex-1">← Back</button>
+              <button onClick={() => setStep(1)} className="btn-secondary flex-1">{t.back2}</button>
               <button onClick={() => {
                 if (!form.discounted_price || !form.quantity || (isNearExpiry && (!form.original_price || !form.expiry_date)) || (!isNearExpiry && !form.condition)) {
-                  setError('Please fill all required fields'); return
+                  setError(t.errFields); return
                 }
                 if (form.original_price && parseFloat(form.discounted_price) >= parseFloat(form.original_price)) {
-                  setError(isNearExpiry ? 'Discounted price must be less than original price' : 'Price must be less than original/MRP price'); return
+                  setError(isNearExpiry ? t.errPriceExpiry : t.errPriceGeneral); return
                 }
                 setError(''); setStep(3)
-              }} className="btn-primary flex-1">Next →</button>
+              }} className="btn-primary flex-1">{t.next}</button>
             </div>
           </div>
         )}
 
         {step === 3 && (
           <div className="space-y-4">
-            <h2 className="font-semibold text-gray-900">Location & Photos</h2>
+            <h2 className="font-semibold text-gray-900">{t.locationPhotos}</h2>
             <LocationPicker value={location} onChange={setLocation} />
 
             {/* Photos */}
             <div>
-              <label className="label">Photos <span className="text-gray-400 font-normal">(optional — up to 8)</span></label>
+              <label className="label">{t.photos} <span className="text-gray-400 font-normal">{t.photosOptional}</span></label>
 
               {/* Tab toggle */}
               <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit mb-3">
                 <button type="button" onClick={() => setPhotoTab('upload')}
                   className={`px-3 py-1 rounded text-sm font-medium transition ${photoTab === 'upload' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
-                  📁 Upload from device
+                  {t.uploadDevice}
                 </button>
                 <button type="button" onClick={() => setPhotoTab('url')}
                   className={`px-3 py-1 rounded text-sm font-medium transition ${photoTab === 'url' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
-                  🔗 Paste image URL
+                  {t.pasteUrl}
                 </button>
               </div>
 
@@ -299,23 +371,23 @@ export default function NewListingPage() {
                     {photos.length < 8 && (
                       <label className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-orange-500 text-gray-400 gap-1">
                         <span className="text-2xl">+</span>
-                        <span className="text-xs">Add photo</span>
+                        <span className="text-xs">{t.addPhoto}</span>
                         <input type="file" accept="image/*" multiple className="hidden" onChange={e => addPhotos(e.target.files)} />
                       </label>
                     )}
                   </div>
-                  <p className="text-xs text-gray-400 mt-2">{photos.length}/8 photos · JPG, PNG, WebP · max 10 MB each</p>
+                  <p className="text-xs text-gray-400 mt-2">{t.photoCount(photos.length)}</p>
                 </div>
               )}
 
               {photoTab === 'url' && (
                 <div className="space-y-2">
-                  <p className="text-xs text-gray-500">Paste links to images already online (e.g. from Google, Facebook, or any website)</p>
+                  <p className="text-xs text-gray-500">{t.urlHint}</p>
                   {imageUrls.map((url, i) => (
                     <div key={i} className="flex gap-2 items-center">
                       <input
                         className="input flex-1 text-sm"
-                        placeholder={`Image URL ${i + 1} — paste a link starting with https://`}
+                        placeholder={t.urlPlaceholder(i + 1)}
                         value={url}
                         onChange={e => {
                           const next = [...imageUrls]
@@ -335,21 +407,21 @@ export default function NewListingPage() {
                   ))}
                   {imageUrls.length < 8 && (
                     <button type="button" onClick={() => setImageUrls(u => [...u, ''])}
-                      className="text-sm text-orange-600 hover:underline">+ Add another URL</button>
+                      className="text-sm text-orange-600 hover:underline">{t.addAnotherUrl}</button>
                   )}
                 </div>
               )}
             </div>
 
             <div className="flex gap-3">
-              <button type="button" onClick={() => setStep(2)} className="btn-secondary flex-1">← Back</button>
+              <button type="button" onClick={() => setStep(2)} className="btn-secondary flex-1">{t.back2}</button>
               <button type="button" onClick={() => handleSubmit(false)} disabled={!canPublish}
                 className="btn-secondary flex-1">
-                {loading ? '...' : 'Save Draft'}
+                {loading ? '...' : t.saveDraft}
               </button>
               <button type="button" onClick={() => handleSubmit(true)} disabled={!canPublish}
                 className="btn-primary flex-1">
-                {loading ? 'Submitting...' : '📋 Submit for Review'}
+                {loading ? t.submitting : t.submitReview}
               </button>
             </div>
           </div>

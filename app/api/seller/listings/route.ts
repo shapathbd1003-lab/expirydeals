@@ -115,8 +115,8 @@ export async function POST(req: NextRequest) {
 
     const qty = parseInt(quantity)
     if (isNaN(qty) || qty < 1 || qty > 100_000) return validationError('quantity must be between 1 and 100,000')
-    if (description.length < 30) {
-      return validationError('description must be at least 30 characters')
+    if (description.length < 15) {
+      return validationError('description must be at least 15 characters')
     }
     if (isNearExpiry && new Date(expiry_date) <= new Date()) {
       return validationError('expiry_date must be in the future')
