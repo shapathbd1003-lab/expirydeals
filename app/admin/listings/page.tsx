@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
+import { useLang } from '@/hooks/useLang'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import Link from 'next/link'
@@ -14,8 +15,37 @@ const STATUS_COLORS: Record<string, string> = {
   deleted: 'bg-red-100 text-red-500',
 }
 
+const T = {
+  en: {
+    admin: '← Admin', allListings: (n: number) => `All Listings (${n})`,
+    searchPlaceholder: 'Search title or seller...',
+    allStatuses: 'All statuses',
+    statuses: { pending: 'Pending Approval', draft: 'Draft', active: 'Active', paused: 'Paused', expired: 'Expired', deleted: 'Deleted' },
+    listing: 'Listing', seller: 'Seller', price: 'Price', status: 'Status', actions: 'Actions',
+    loading: 'Loading...', noListings: 'No listings found.',
+    newBadge: 'New', usedBadge: 'Used',
+    approve: '✅ Approve', activate: 'Activate', pause: 'Pause', delete: 'Delete',
+    confirmDelete: 'Delete this listing?',
+    prev: '← Prev', next: 'Next →', pageOf: (p: number, total: number) => `Page ${p} of ${total}`,
+  },
+  bn: {
+    admin: '← অ্যাডমিন', allListings: (n: number) => `সব বিজ্ঞাপন (${n})`,
+    searchPlaceholder: 'শিরোনাম বা বিক্রেতা খুঁজুন...',
+    allStatuses: 'সব স্ট্যাটাস',
+    statuses: { pending: 'অনুমোদনের অপেক্ষায়', draft: 'খসড়া', active: 'সক্রিয়', paused: 'বিরতি দেওয়া', expired: 'মেয়াদোত্তীর্ণ', deleted: 'মুছে ফেলা হয়েছে' },
+    listing: 'বিজ্ঞাপন', seller: 'বিক্রেতা', price: 'মূল্য', status: 'স্ট্যাটাস', actions: 'পদক্ষেপ',
+    loading: 'লোড হচ্ছে...', noListings: 'কোনো বিজ্ঞাপন পাওয়া যায়নি।',
+    newBadge: 'নতুন', usedBadge: 'ব্যবহৃত',
+    approve: '✅ অনুমোদন করুন', activate: 'সক্রিয় করুন', pause: 'বিরতি দিন', delete: 'মুছুন',
+    confirmDelete: 'এই বিজ্ঞাপনটি মুছে ফেলবেন?',
+    prev: '← পেছনে', next: 'পরবর্তী →', pageOf: (p: number, total: number) => `পৃষ্ঠা ${p} এর ${total}`,
+  },
+}
+
 function AdminListingsContent() {
   const { user, token, loading: authLoading } = useAuth()
+  const { lang } = useLang()
+  const t = T[lang]
   const router = useRouter()
   const searchParams = useSearchParams()
   const [listings, setListings] = useState<any[]>([])
@@ -62,17 +92,17 @@ function AdminListingsContent() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/admin" className="text-gray-400 hover:text-gray-600">← Admin</Link>
-        <h1 className="text-xl font-bold text-gray-900">All Listings ({total})</h1>
+        <Link href="/admin" className="text-gray-400 hover:text-gray-600">{t.admin}</Link>
+        <h1 className="text-xl font-bold text-gray-900">{t.allListings(total)}</h1>
       </div>
 
       <div className="flex flex-wrap gap-3 mb-5">
-        <input className="input max-w-xs" placeholder="Search title or seller..."
+        <input className="input max-w-xs" placeholder={t.searchPlaceholder}
           value={q} onChange={e => { setQ(e.target.value); setPage(1) }} />
         <select className="input w-auto" value={status} onChange={e => { setStatus(e.target.value); setPage(1) }}>
-          <option value="">All statuses</option>
-          {['pending', 'draft', 'active', 'paused', 'expired', 'deleted'].map(s => (
-            <option key={s} value={s}>{s === 'pending' ? 'Pending Approval' : s.charAt(0).toUpperCase() + s.slice(1)}</option>
+          <option value="">{t.allStatuses}</option>
+          {(['pending', 'draft', 'active', 'paused', 'expired', 'deleted'] as const).map(s => (
+            <option key={s} value={s}>{t.statuses[s]}</option>
           ))}
         </select>
       </div>
@@ -81,18 +111,18 @@ function AdminListingsContent() {
         <table className="w-full text-sm min-w-[700px]">
           <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
-              <th className="text-left px-4 py-3 text-gray-600 font-medium w-[35%]">Listing</th>
-              <th className="text-left px-4 py-3 text-gray-600 font-medium w-[20%]">Seller</th>
-              <th className="text-left px-4 py-3 text-gray-600 font-medium w-[15%]">Price</th>
-              <th className="text-left px-4 py-3 text-gray-600 font-medium w-[12%]">Status</th>
-              <th className="text-left px-4 py-3 text-gray-600 font-medium w-[18%]">Actions</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium w-[35%]">{t.listing}</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium w-[20%]">{t.seller}</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium w-[15%]">{t.price}</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium w-[12%]">{t.status}</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium w-[18%]">{t.actions}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {loading ? (
-              <tr><td colSpan={5} className="text-center py-8 text-gray-400">Loading...</td></tr>
+              <tr><td colSpan={5} className="text-center py-8 text-gray-400">{t.loading}</td></tr>
             ) : listings.length === 0 ? (
-              <tr><td colSpan={5} className="text-center py-8 text-gray-400">No listings found.</td></tr>
+              <tr><td colSpan={5} className="text-center py-8 text-gray-400">{t.noListings}</td></tr>
             ) : listings.map((l: any) => {
               const photo = l.photos?.[0]
               return (
@@ -113,7 +143,7 @@ function AdminListingsContent() {
                           {l.category?.name}
                           {l.listingType && l.listingType !== 'near_expiry' && (
                             <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${l.listingType === 'new_item' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                              {l.listingType === 'new_item' ? 'New' : 'Used'}
+                              {l.listingType === 'new_item' ? t.newBadge : t.usedBadge}
                             </span>
                           )}
                         </p>
@@ -124,7 +154,7 @@ function AdminListingsContent() {
                   <td className="px-4 py-3 text-gray-900">৳{l.discountedPrice}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-0.5 rounded-full text-xs ${STATUS_COLORS[l.status] || 'bg-gray-100 text-gray-500'}`}>
-                      {l.status}
+                      {t.statuses[l.status as keyof typeof t.statuses] || l.status}
                     </span>
                   </td>
                   <td className="px-4 py-3">
@@ -132,18 +162,18 @@ function AdminListingsContent() {
                       {l.status === 'pending' && (
                         <button onClick={() => doAction(l.id, 'approve')}
                           className="text-xs bg-orange-500 hover:bg-orange-600 text-white font-semibold px-2.5 py-1 rounded-lg transition">
-                          ✅ Approve
+                          {t.approve}
                         </button>
                       )}
                       {(l.status === 'paused' || l.status === 'expired') && (
-                        <button onClick={() => doAction(l.id, 'activate')} className="text-xs text-orange-600 hover:underline">Activate</button>
+                        <button onClick={() => doAction(l.id, 'activate')} className="text-xs text-orange-600 hover:underline">{t.activate}</button>
                       )}
                       {l.status === 'active' && (
-                        <button onClick={() => doAction(l.id, 'pause')} className="text-xs text-yellow-600 hover:underline">Pause</button>
+                        <button onClick={() => doAction(l.id, 'pause')} className="text-xs text-yellow-600 hover:underline">{t.pause}</button>
                       )}
                       {l.status !== 'deleted' && (
-                        <button onClick={() => { if (confirm('Delete this listing?')) doAction(l.id, 'delete') }}
-                          className="text-xs text-red-500 hover:underline">Delete</button>
+                        <button onClick={() => { if (confirm(t.confirmDelete)) doAction(l.id, 'delete') }}
+                          className="text-xs text-red-500 hover:underline">{t.delete}</button>
                       )}
                     </div>
                   </td>
@@ -157,10 +187,10 @@ function AdminListingsContent() {
       {total > 20 && (
         <div className="flex justify-center gap-2 mt-6">
           <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-            className="btn-secondary disabled:opacity-40">← Prev</button>
-          <span className="self-center text-sm text-gray-500">Page {page} of {Math.ceil(total / 20)}</span>
+            className="btn-secondary disabled:opacity-40">{t.prev}</button>
+          <span className="self-center text-sm text-gray-500">{t.pageOf(page, Math.ceil(total / 20))}</span>
           <button onClick={() => setPage(p => p + 1)} disabled={page >= Math.ceil(total / 20)}
-            className="btn-secondary disabled:opacity-40">Next →</button>
+            className="btn-secondary disabled:opacity-40">{t.next}</button>
         </div>
       )}
     </div>

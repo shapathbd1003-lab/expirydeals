@@ -2,21 +2,78 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
+import { useLang } from '@/hooks/useLang'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 
 const STATUS_TABS = ['active', 'pending', 'draft', 'paused', 'expired', 'deleted'] as const
 
-function daysLeft(expiryDate: string) {
+const T = {
+  en: {
+    submittedTitle: '✅ Listing submitted for review!',
+    submittedBody: 'Your listing is pending admin approval. It will go live once approved — usually within 24 hours.',
+    myAds: 'My Ads', postNewItem: '+ Post New Item',
+    tabs: { active: 'Active', pending: 'Pending Approval', draft: 'Drafts', paused: 'Paused', expired: 'Expired', deleted: 'Deleted' },
+    noneOf: { active: 'No active ads.', pending: 'No listings pending approval.', draft: 'No saved drafts.', paused: 'No paused ads.', expired: 'No expired ads.', deleted: 'No deleted ads.' },
+    postFirstAd: 'Post your first ad', createListing: 'Create a new listing',
+    views: 'views', edit: 'Edit', submitForReview: '📋 Submit for Review',
+    awaitingApproval: '⏳ Awaiting admin approval',
+    pause: 'Pause', resume: 'Resume', markSold: '✅ Mark Sold',
+    delete: 'Delete', removePermanently: 'Remove permanently',
+    draftBadge: 'Draft', pendingBadge: 'Pending Approval', newBadge: 'New', usedBadge: 'Used',
+    expiredWord: 'Expired', today: 'Today',
+    confirmPermanentDelete: 'Permanently remove this listing from the database? This cannot be undone.',
+    modal: {
+      markSoldTitle: 'Mark as Sold', deleteListingTitle: 'Delete Listing',
+      howSold: 'How did you sell it?', howResolved: 'How was this resolved?',
+      soldViaED: 'Sold via ExpiryDeals', soldViaEDDesc: 'Buyer found you through this platform',
+      soldViaOther: 'Sold via another platform', soldViaOtherDesc: 'Facebook, Bikroy, WhatsApp, etc.',
+      otherNotSure: 'Other / Not sure',
+      justDelete: 'Just delete — not sold', justDeleteDesc: 'Remove without recording a sale',
+      note: 'Note', optional: '(optional)', notePlaceholder: 'e.g. sold to a restaurant, 50 units',
+      saving: 'Saving...', deleteBtn: '🗑️ Delete', confirmSold: '✅ Confirm Sold', confirmDelete: '✅ Confirm & Delete',
+      cancel: 'Cancel',
+    },
+  },
+  bn: {
+    submittedTitle: '✅ বিজ্ঞাপন পর্যালোচনার জন্য জমা হয়েছে!',
+    submittedBody: 'আপনার বিজ্ঞাপনটি অ্যাডমিন অনুমোদনের অপেক্ষায় আছে। অনুমোদন হলেই এটি লাইভ হবে — সাধারণত ২৪ ঘণ্টার মধ্যে।',
+    myAds: 'আমার বিজ্ঞাপন', postNewItem: '+ নতুন পণ্য যোগ করুন',
+    tabs: { active: 'সক্রিয়', pending: 'অনুমোদনের অপেক্ষায়', draft: 'খসড়া', paused: 'বিরতি দেওয়া', expired: 'মেয়াদোত্তীর্ণ', deleted: 'মুছে ফেলা হয়েছে' },
+    noneOf: { active: 'কোনো সক্রিয় বিজ্ঞাপন নেই।', pending: 'অনুমোদনের অপেক্ষায় কোনো বিজ্ঞাপন নেই।', draft: 'কোনো সংরক্ষিত খসড়া নেই।', paused: 'বিরতি দেওয়া কোনো বিজ্ঞাপন নেই।', expired: 'মেয়াদোত্তীর্ণ কোনো বিজ্ঞাপন নেই।', deleted: 'মুছে ফেলা কোনো বিজ্ঞাপন নেই।' },
+    postFirstAd: 'আপনার প্রথম বিজ্ঞাপন দিন', createListing: 'নতুন বিজ্ঞাপন তৈরি করুন',
+    views: 'ভিউ', edit: 'সম্পাদনা', submitForReview: '📋 পর্যালোচনার জন্য জমা দিন',
+    awaitingApproval: '⏳ অ্যাডমিন অনুমোদনের অপেক্ষায়',
+    pause: 'বিরতি দিন', resume: 'পুনরায় চালু করুন', markSold: '✅ বিক্রি হয়েছে চিহ্নিত করুন',
+    delete: 'মুছুন', removePermanently: 'স্থায়ীভাবে মুছে ফেলুন',
+    draftBadge: 'খসড়া', pendingBadge: 'অনুমোদনের অপেক্ষায়', newBadge: 'নতুন', usedBadge: 'ব্যবহৃত',
+    expiredWord: 'মেয়াদোত্তীর্ণ', today: 'আজ',
+    confirmPermanentDelete: 'এই বিজ্ঞাপনটি ডাটাবেস থেকে স্থায়ীভাবে মুছে ফেলবেন? এটি আর ফিরিয়ে আনা যাবে না।',
+    modal: {
+      markSoldTitle: 'বিক্রি হয়েছে চিহ্নিত করুন', deleteListingTitle: 'বিজ্ঞাপন মুছুন',
+      howSold: 'আপনি কীভাবে এটি বিক্রি করেছেন?', howResolved: 'এটি কীভাবে সমাধান হয়েছে?',
+      soldViaED: 'ExpiryDealsBD এর মাধ্যমে বিক্রি হয়েছে', soldViaEDDesc: 'ক্রেতা এই প্ল্যাটফর্মের মাধ্যমে আপনাকে পেয়েছেন',
+      soldViaOther: 'অন্য প্ল্যাটফর্মের মাধ্যমে বিক্রি হয়েছে', soldViaOtherDesc: 'ফেসবুক, বিক্রয়, হোয়াটসঅ্যাপ ইত্যাদি',
+      otherNotSure: 'অন্যান্য / নিশ্চিত নই',
+      justDelete: 'শুধু মুছে ফেলুন — বিক্রি হয়নি', justDeleteDesc: 'বিক্রয়ের তথ্য ছাড়াই মুছে ফেলুন',
+      note: 'নোট', optional: '(ঐচ্ছিক)', notePlaceholder: 'যেমন: একটি রেস্তোরাঁর কাছে ৫০ ইউনিট বিক্রি হয়েছে',
+      saving: 'সংরক্ষণ হচ্ছে...', deleteBtn: '🗑️ মুছুন', confirmSold: '✅ বিক্রি নিশ্চিত করুন', confirmDelete: '✅ নিশ্চিত করুন ও মুছুন',
+      cancel: 'বাতিল',
+    },
+  },
+}
+
+function daysLeft(expiryDate: string, t: typeof T['en']) {
   const diff = Math.ceil((new Date(expiryDate).getTime() - Date.now()) / 86400000)
-  if (diff < 0) return 'Expired'
-  if (diff === 0) return 'Today'
+  if (diff < 0) return t.expiredWord
+  if (diff === 0) return t.today
   return `${diff}d`
 }
 
-function ActionModal({ listing, token, mode, onClose, onDone }: {
-  listing: any, token: string | null, mode: 'sold' | 'delete', onClose: () => void, onDone: () => void
+function ActionModal({ listing, token, mode, lang, onClose, onDone }: {
+  listing: any, token: string | null, mode: 'sold' | 'delete', lang: 'en' | 'bn', onClose: () => void, onDone: () => void
 }) {
+  const t = T[lang].modal
   const [soldVia, setSoldVia] = useState<'expirydeals' | 'other_platform' | 'other' | 'no_sale'>('expirydeals')
   const [soldNote, setSoldNote] = useState('')
   const [saving, setSaving] = useState(false)
@@ -45,10 +102,10 @@ function ActionModal({ listing, token, mode, onClose, onDone }: {
   }
 
   const options = [
-    { value: 'expirydeals', icon: '🟠', label: 'Sold via ExpiryDeals', desc: 'Buyer found you through this platform' },
-    { value: 'other_platform', icon: '🔵', label: 'Sold via another platform', desc: 'Facebook, Bikroy, WhatsApp, etc.' },
-    { value: 'other', icon: '⚪', label: 'Other / Not sure', desc: '' },
-    ...(!isSold ? [{ value: 'no_sale', icon: '🗑️', label: 'Just delete — not sold', desc: 'Remove without recording a sale' }] : []),
+    { value: 'expirydeals', icon: '🟠', label: t.soldViaED, desc: t.soldViaEDDesc },
+    { value: 'other_platform', icon: '🔵', label: t.soldViaOther, desc: t.soldViaOtherDesc },
+    { value: 'other', icon: '⚪', label: t.otherNotSure, desc: '' },
+    ...(!isSold ? [{ value: 'no_sale', icon: '🗑️', label: t.justDelete, desc: t.justDeleteDesc }] : []),
   ]
 
   return (
@@ -57,14 +114,14 @@ function ActionModal({ listing, token, mode, onClose, onDone }: {
       <div className="bg-white rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-xl">
         <div>
           <h3 id="action-modal-title" className="font-bold text-lg text-gray-900">
-            {isSold ? 'Mark as Sold' : 'Delete Listing'}
+            {isSold ? t.markSoldTitle : t.deleteListingTitle}
           </h3>
           <p className="text-sm text-gray-500 mt-0.5 line-clamp-1">{listing.title}</p>
         </div>
 
         <div className="space-y-2">
           <p className="text-sm font-medium text-gray-700">
-            {isSold ? 'How did you sell it?' : 'How was this resolved?'}
+            {isSold ? t.howSold : t.howResolved}
           </p>
           {options.map(opt => (
             <button key={opt.value} type="button"
@@ -84,10 +141,10 @@ function ActionModal({ listing, token, mode, onClose, onDone }: {
 
         {soldVia !== 'no_sale' && (
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Note (optional)</label>
+            <label className="text-sm font-medium text-gray-700 block mb-1">{t.note} <span className="text-gray-400 font-normal">{t.optional}</span></label>
             <input
               className="input text-sm"
-              placeholder="e.g. sold to a restaurant, 50 units"
+              placeholder={t.notePlaceholder}
               value={soldNote}
               onChange={e => setSoldNote(e.target.value)}
             />
@@ -97,9 +154,9 @@ function ActionModal({ listing, token, mode, onClose, onDone }: {
         <div className="flex gap-2 pt-1">
           <button onClick={confirm} disabled={saving}
             className={`flex-1 disabled:opacity-50 ${soldVia === 'no_sale' ? 'btn-danger' : 'btn-primary'}`}>
-            {saving ? 'Saving...' : soldVia === 'no_sale' ? '🗑️ Delete' : isSold ? '✅ Confirm Sold' : '✅ Confirm & Delete'}
+            {saving ? t.saving : soldVia === 'no_sale' ? t.deleteBtn : isSold ? t.confirmSold : t.confirmDelete}
           </button>
-          <button onClick={onClose} className="btn-secondary flex-1">Cancel</button>
+          <button onClick={onClose} className="btn-secondary flex-1">{t.cancel}</button>
         </div>
       </div>
     </div>
@@ -108,11 +165,16 @@ function ActionModal({ listing, token, mode, onClose, onDone }: {
 
 function MyListingsContent() {
   const { user, token, loading: authLoading } = useAuth()
+  const { lang } = useLang()
+  const t = T[lang]
   const router = useRouter()
   const searchParams = useSearchParams()
-  const submitted = searchParams.get('submitted') === '1'
+  const submittedFromUrl = searchParams.get('submitted') === '1'
   const searchParamTab = searchParams.get('tab') as typeof STATUS_TABS[number] | null
-  const [tab, setTab] = useState<typeof STATUS_TABS[number]>(submitted ? 'pending' : (searchParamTab && STATUS_TABS.includes(searchParamTab as any) ? searchParamTab : 'active'))
+  const [tab, setTab] = useState<typeof STATUS_TABS[number]>(submittedFromUrl ? 'pending' : (searchParamTab && STATUS_TABS.includes(searchParamTab as any) ? searchParamTab : 'active'))
+  // Captured once at mount so later actions on this page (e.g. deleting the
+  // just-submitted listing) don't leave a stale banner tied to the URL forever
+  const [showSubmitted, setShowSubmitted] = useState(submittedFromUrl)
   const [listings, setListings] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [actionModal, setActionModal] = useState<{ listing: any; mode: 'sold' | 'delete' } | null>(null)
@@ -120,6 +182,13 @@ function MyListingsContent() {
   useEffect(() => {
     if (!authLoading && !user) router.push('/login')
   }, [user, authLoading, router])
+
+  // Clean the ?submitted=1 param off the URL once shown, so refreshing or
+  // navigating back doesn't re-trigger it
+  useEffect(() => {
+    if (submittedFromUrl) router.replace('/my/listings?tab=pending', { scroll: false })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const fetchListings = () => {
     if (!user) return
@@ -159,41 +228,42 @@ function MyListingsContent() {
   }
 
   const deletePermanent = async (id: string) => {
-    if (!confirm('Permanently remove this listing from the database? This cannot be undone.')) return
+    if (!confirm(t.confirmPermanentDelete)) return
     await fetch(`/api/seller/listings/${id}`, {
       method: 'DELETE',
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       credentials: 'include',
     })
     setListings(ls => ls.filter(l => l.id !== id))
+    setShowSubmitted(false)
   }
 
   if (authLoading) return <div className="text-center py-20 text-gray-500">Loading...</div>
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {submitted && (
+      {showSubmitted && (
         <div className="bg-green-50 border border-green-300 rounded-xl p-4 mb-6 text-sm text-green-800">
-          <p className="font-semibold mb-1">✅ Listing submitted for review!</p>
-          <p>Your listing is pending admin approval. It will go live once approved — usually within 24 hours.</p>
+          <p className="font-semibold mb-1">{t.submittedTitle}</p>
+          <p>{t.submittedBody}</p>
         </div>
       )}
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Ads</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t.myAds}</h1>
           <p className="text-gray-500 text-sm">{user?.full_name}</p>
         </div>
-        <Link href="/seller/listings/new" className="btn-primary">+ Post New Item</Link>
+        <Link href="/seller/listings/new" className="btn-primary">{t.postNewItem}</Link>
       </div>
 
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6 flex-wrap">
         {STATUS_TABS.map((s) => (
           <button key={s} onClick={() => setTab(s)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
               tab === s ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
             }`}>
-            {s === 'draft' ? 'Drafts' : s === 'pending' ? 'Pending Approval' : s.charAt(0).toUpperCase() + s.slice(1)}
+            {t.tabs[s]}
           </button>
         ))}
       </div>
@@ -205,9 +275,9 @@ function MyListingsContent() {
       ) : listings.length === 0 ? (
         <div className="text-center py-16 text-gray-500">
           <p className="text-4xl mb-3">📦</p>
-          <p className="mb-4">No {tab === 'draft' ? 'saved drafts' : tab === 'pending' ? 'listings pending approval' : tab + ' ads'}.</p>
-          {tab === 'active' && <Link href="/seller/listings/new" className="btn-primary">Post your first ad</Link>}
-          {tab === 'draft' && <Link href="/seller/listings/new" className="btn-primary">Create a new listing</Link>}
+          <p className="mb-4">{t.noneOf[tab]}</p>
+          {tab === 'active' && <Link href="/seller/listings/new" className="btn-primary">{t.postFirstAd}</Link>}
+          {tab === 'draft' && <Link href="/seller/listings/new" className="btn-primary">{t.createListing}</Link>}
         </div>
       ) : (
         <div className="space-y-3">
@@ -226,49 +296,49 @@ function MyListingsContent() {
                     <p className="text-sm text-gray-500">৳ {parseFloat(l.discountedPrice).toLocaleString('en-BD')} · {l.category?.name} · {l.city}</p>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-gray-500 flex-shrink-0">
-                    <span>👁 {l.viewCount}</span>
+                    <span>👁 {l.viewCount} {t.views}</span>
                     {tab !== 'draft' && (!l.listingType || l.listingType === 'near_expiry') && (
-                      <span className={l.days_remaining != null && l.days_remaining <= 3 ? 'text-red-500 font-medium' : ''}>{daysLeft(l.expiryDate)}</span>
+                      <span className={l.days_remaining != null && l.days_remaining <= 3 ? 'text-red-500 font-medium' : ''}>{daysLeft(l.expiryDate, t)}</span>
                     )}
                     {tab !== 'draft' && l.listingType && l.listingType !== 'near_expiry' && (
                       <span className={`px-1.5 py-0.5 rounded font-medium ${l.listingType === 'new_item' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                        {l.listingType === 'new_item' ? 'New' : 'Used'}
+                        {l.listingType === 'new_item' ? t.newBadge : t.usedBadge}
                       </span>
                     )}
                     {tab === 'draft' && (
-                      <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs font-medium">Draft</span>
+                      <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs font-medium">{t.draftBadge}</span>
                     )}
                     {tab === 'pending' && (
-                      <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-medium">Pending Approval</span>
+                      <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-medium">{t.pendingBadge}</span>
                     )}
                   </div>
                 </div>
                 <div className="flex gap-2 mt-2 flex-wrap">
-                  <Link href={`/seller/listings/${l.id}/edit`} className="text-xs btn-secondary py-1 px-2">Edit</Link>
+                  <Link href={`/seller/listings/${l.id}/edit`} className="text-xs btn-secondary py-1 px-2">{t.edit}</Link>
                   {tab === 'draft' && (
                     <button onClick={() => submitForReview(l.id)}
                       className="text-xs bg-orange-500 hover:bg-orange-600 text-white font-semibold py-1 px-3 rounded-lg transition">
-                      📋 Submit for Review
+                      {t.submitForReview}
                     </button>
                   )}
                   {tab === 'pending' && (
-                    <span className="text-xs text-blue-600 font-medium py-1 px-2 bg-blue-50 rounded-lg">⏳ Awaiting admin approval</span>
+                    <span className="text-xs text-blue-600 font-medium py-1 px-2 bg-blue-50 rounded-lg">{t.awaitingApproval}</span>
                   )}
                   {(tab === 'active' || tab === 'paused') && (
                     <>
                       <button onClick={() => pauseResume(l.id, l.status)} className="text-xs btn-secondary py-1 px-2">
-                        {l.status === 'active' ? 'Pause' : 'Resume'}
+                        {l.status === 'active' ? t.pause : t.resume}
                       </button>
                       <button onClick={() => setActionModal({ listing: l, mode: 'sold' })} className="text-xs bg-orange-500 hover:bg-orange-600 text-white font-semibold py-1 px-3 rounded-lg transition">
-                        ✅ Mark Sold
+                        {t.markSold}
                       </button>
                     </>
                   )}
                   {tab !== 'deleted' && (
-                    <button onClick={() => setActionModal({ listing: l, mode: 'delete' })} className="text-xs text-red-500 hover:underline py-1">Delete</button>
+                    <button onClick={() => setActionModal({ listing: l, mode: 'delete' })} className="text-xs text-red-500 hover:underline py-1">{t.delete}</button>
                   )}
                   {tab === 'deleted' && (
-                    <button onClick={() => deletePermanent(l.id)} className="text-xs text-red-600 font-medium hover:underline py-1">Remove permanently</button>
+                    <button onClick={() => deletePermanent(l.id)} className="text-xs text-red-600 font-medium hover:underline py-1">{t.removePermanently}</button>
                   )}
                 </div>
               </div>
@@ -282,8 +352,13 @@ function MyListingsContent() {
           listing={actionModal.listing}
           token={token}
           mode={actionModal.mode}
+          lang={lang}
           onClose={() => setActionModal(null)}
-          onDone={() => { setActionModal(null); setListings(ls => ls.filter(l => l.id !== actionModal.listing.id)) }}
+          onDone={() => {
+            setActionModal(null)
+            setListings(ls => ls.filter(l => l.id !== actionModal.listing.id))
+            setShowSubmitted(false)
+          }}
         />
       )}
     </div>
