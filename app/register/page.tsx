@@ -49,10 +49,8 @@ function RegisterForm() {
 
     if (!res.ok) {
       setError(data.error?.message || t.failedMsg)
-    } else if (data.data?.auto_verified) {
-      router.push('/login')
     } else {
-      router.push(`/verify-email/pending?email=${encodeURIComponent(form.email)}`)
+      router.push('/login?registered=1')
     }
   }
 

@@ -9,12 +9,8 @@ import { Suspense } from 'react'
 const T = {
   en: {
     welcomeBack: 'Welcome back', subtitle: 'Log in to your ExpiryDealsBD account',
-    checkEmailTitle: '📧 Check your email!',
-    checkEmailBody: 'We sent a verification link to your email address. Click it to activate your account, then log in here.',
-    notVerifiedTitle: '📧 Email not verified',
-    notVerifiedBody: 'Please verify your email address to continue. Check your inbox for a verification link.',
-    resendSentMsg: '✅ Verification email sent! Check your inbox.',
-    resendLink: 'Resend verification email →',
+    registeredTitle: '✅ Account created!',
+    registeredBody: 'You can log in right away — no verification needed.',
     email: 'Email', password: 'Password',
     login: 'Log in', loggingIn: 'Logging in...',
     forgotPassword: 'Forgot password?',
@@ -22,12 +18,8 @@ const T = {
   },
   bn: {
     welcomeBack: 'ফিরে আসার জন্য স্বাগতম', subtitle: 'আপনার ExpiryDealsBD অ্যাকাউন্টে লগ ইন করুন',
-    checkEmailTitle: '📧 আপনার ইমেইল চেক করুন!',
-    checkEmailBody: 'আমরা আপনার ইমেইল ঠিকানায় একটি যাচাইকরণ লিংক পাঠিয়েছি। অ্যাকাউন্ট সক্রিয় করতে সেটিতে ক্লিক করুন, তারপর এখানে লগ ইন করুন।',
-    notVerifiedTitle: '📧 ইমেইল যাচাই করা হয়নি',
-    notVerifiedBody: 'চালিয়ে যেতে আপনার ইমেইল ঠিকানা যাচাই করুন। যাচাইকরণ লিংকের জন্য আপনার ইনবক্স দেখুন।',
-    resendSentMsg: '✅ যাচাইকরণ ইমেইল পাঠানো হয়েছে! আপনার ইনবক্স দেখুন।',
-    resendLink: 'যাচাইকরণ ইমেইল আবার পাঠান →',
+    registeredTitle: '✅ অ্যাকাউন্ট তৈরি হয়েছে!',
+    registeredBody: 'আপনি এখনই লগ ইন করতে পারেন — কোনো যাচাইকরণের দরকার নেই।',
     email: 'ইমেইল', password: 'পাসওয়ার্ড',
     login: 'লগ ইন', loggingIn: 'লগ ইন হচ্ছে...',
     forgotPassword: 'পাসওয়ার্ড ভুলে গেছেন?',
@@ -41,41 +33,23 @@ function LoginForm() {
   const t = T[lang]
   const router = useRouter()
   const searchParams = useSearchParams()
-  const justRegistered = searchParams.get('verify') === '1'
+  const justRegistered = searchParams.get('registered') === '1'
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
-  const [unverified, setUnverified] = useState(false)
-  const [resendSent, setResendSent] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    setUnverified(false)
     setLoading(true)
     const result = await login(form.email, form.password)
     setLoading(false)
     if (result.error) {
-      // API now blocks unverified users with a specific message
-      if (result.error.toLowerCase().includes('verify your email')) {
-        setUnverified(true)
-      } else {
-        setError(result.error)
-      }
+      setError(result.error)
     } else {
       if (result.role === 'admin') router.push('/admin')
       else router.push('/my/listings')
     }
-  }
-
-  const resendVerification = async () => {
-    await fetch('/api/auth/resend-verification', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: form.email }),
-      credentials: 'include',
-    })
-    setResendSent(true)
   }
 
   return (
@@ -93,22 +67,8 @@ function LoginForm() {
 
         {justRegistered && (
           <div className="bg-green-50 border border-green-300 rounded-xl p-4 mb-4 text-sm text-green-800">
-            <p className="font-semibold mb-1">{t.checkEmailTitle}</p>
-            <p>{t.checkEmailBody}</p>
-          </div>
-        )}
-
-        {unverified && (
-          <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-4 mb-4 text-sm text-yellow-800">
-            <p className="font-semibold mb-1">{t.notVerifiedTitle}</p>
-            <p className="mb-3">{t.notVerifiedBody}</p>
-            {resendSent ? (
-              <p className="text-green-700 font-medium">{t.resendSentMsg}</p>
-            ) : (
-              <button onClick={resendVerification} className="text-orange-600 font-semibold hover:underline">
-                {t.resendLink}
-              </button>
-            )}
+            <p className="font-semibold mb-1">{t.registeredTitle}</p>
+            <p>{t.registeredBody}</p>
           </div>
         )}
 

@@ -30,8 +30,7 @@ export function middleware(req: NextRequest) {
   if (
     pathname.startsWith('/api/auth/login') ||
     pathname.startsWith('/api/auth/register') ||
-    pathname.startsWith('/api/auth/forgot-password') ||
-    pathname.startsWith('/api/auth/resend-verification')
+    pathname.startsWith('/api/auth/forgot-password')
   ) {
     res.headers.set('X-RateLimit-Policy', 'auth')
   }

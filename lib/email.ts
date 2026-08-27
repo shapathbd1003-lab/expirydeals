@@ -49,22 +49,6 @@ async function sendEmail(options: EmailOptions) {
   }
 }
 
-export async function sendVerificationEmail(email: string, token: string, name: string) {
-  const link = `${APP_URL}/verify-email?token=${encodeURIComponent(token)}`
-  await sendEmail({
-    to: email,
-    subject: 'Verify your ExpiryDealsBD account',
-    html: `
-      <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
-        <h2 style="color:#f97316">Welcome to ExpiryDealsBD, ${escapeHtml(name)}!</h2>
-        <p>Click the button below to verify your email address:</p>
-        <a href="${link}" style="display:inline-block;padding:12px 24px;background:#f97316;color:white;text-decoration:none;border-radius:6px;font-weight:600">Verify Email</a>
-        <p style="color:#666;font-size:14px;margin-top:24px">This link expires in 24 hours. If you didn't create an account, ignore this email.</p>
-      </div>
-    `,
-  })
-}
-
 export async function sendPasswordResetEmail(email: string, token: string) {
   const link = `${APP_URL}/reset-password?token=${encodeURIComponent(token)}`
   await sendEmail({
