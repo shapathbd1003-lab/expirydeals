@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     const accessToken = generateAccessToken({
       userId: user.id,
       role: user.role,
-      email: user.email,
+      email: user.email ?? '',
     })
     const refreshToken = generateRefreshToken()
     const tokenHash = hashToken(refreshToken)

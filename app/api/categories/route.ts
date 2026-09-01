@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { okCached, serverError } from '@/lib/response'
+import { ok, serverError } from '@/lib/response'
 import { startOfToday } from '@/lib/slugify'
 
 // Force per-request execution — without this, Next.js statically freezes the
@@ -30,7 +30,7 @@ export async function GET() {
         },
       },
     })
-    return okCached(categories, 60)
+    return ok(categories)
   } catch (e) {
     console.error(e)
     return serverError()

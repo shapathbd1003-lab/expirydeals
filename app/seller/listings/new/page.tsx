@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useLang } from '@/hooks/useLang'
 import Link from 'next/link'
 import { LocationPicker } from '@/components/LocationPicker'
+import { compressImageFiles } from '@/lib/image-compress'
 
 const MIN_DESCRIPTION_LENGTH = 15
 
@@ -54,6 +55,7 @@ const T = {
     urlPlaceholder: (i: number) => `Image URL ${i} — paste a link starting with https://`,
     addAnotherUrl: '+ Add another URL',
     saveDraft: 'Save Draft', submitReview: '📋 Submit for Review', submitting: 'Submitting...',
+    uploadingPhotos: '📷 Uploading photos...',
   },
   bn: {
     back: '← ফিরে যান', title: 'নতুন বিজ্ঞাপন তৈরি করুন',
@@ -82,6 +84,7 @@ const T = {
     urlPlaceholder: (i: number) => `ছবির লিংক ${i} — https:// দিয়ে শুরু হওয়া একটি লিংক পেস্ট করুন`,
     addAnotherUrl: '+ আরেকটি লিংক যোগ করুন',
     saveDraft: 'খসড়া সংরক্ষণ করুন', submitReview: '📋 পর্যালোচনার জন্য জমা দিন', submitting: 'জমা হচ্ছে...',
+    uploadingPhotos: '📷 ছবি আপলোড হচ্ছে...',
   },
 }
 
@@ -104,6 +107,7 @@ export default function NewListingPage() {
   const [photoTab, setPhotoTab] = useState<'upload' | 'url'>('upload')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [uploadingPhotos, setUploadingPhotos] = useState(false)
   const [step, setStep] = useState(1)
 
   const isNearExpiry = listingType === 'near_expiry'
@@ -165,28 +169,40 @@ export default function NewListingPage() {
 
       const listingId = data.data.id
       const authHeaders = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+      let photoWarning = ''
 
       if (photos.length > 0) {
-        const dataUrls = await Promise.all(photos.map(f => new Promise<string>((resolve, reject) => {
-          const reader = new FileReader()
-          reader.onload = e => resolve(e.target?.result as string)
-          reader.onerror = reject
-          reader.readAsDataURL(f)
-        })))
-        await fetch(`/api/seller/listings/${listingId}/photo-urls`, {
-          method: 'POST', headers: authHeaders, credentials: 'include',
-          body: JSON.stringify({ urls: dataUrls }),
-        })
+        setUploadingPhotos(true)
+        try {
+          // Resize/re-encode before upload so slow connections aren't sending
+          // full-resolution phone photos (often 8-10MB each) as base64
+          const dataUrls = await compressImageFiles(photos)
+          const controller = new AbortController()
+          const timeout = setTimeout(() => controller.abort(), 60000)
+          const photoRes = await fetch(`/api/seller/listings/${listingId}/photo-urls`, {
+            method: 'POST', headers: authHeaders, credentials: 'include',
+            body: JSON.stringify({ urls: dataUrls }),
+            signal: controller.signal,
+          })
+          clearTimeout(timeout)
+          if (!photoRes.ok) photoWarning = 'Listing created, but photos failed to upload — add them from Edit.'
+        } catch {
+          photoWarning = 'Listing created, but photos failed to upload (connection too slow) — add them from Edit.'
+        } finally {
+          setUploadingPhotos(false)
+        }
       }
 
       if (photoTab === 'url' && validImageUrls.length > 0) {
-        await fetch(`/api/seller/listings/${listingId}/photo-urls`, {
+        const urlRes = await fetch(`/api/seller/listings/${listingId}/photo-urls`, {
           method: 'POST', headers: authHeaders, credentials: 'include',
           body: JSON.stringify({ urls: validImageUrls }),
         })
+        if (!urlRes.ok) photoWarning = 'Listing created, but photo URLs failed to save — add them from Edit.'
       }
 
-      router.push(publish ? '/my/listings?submitted=1' : '/my/listings?tab=draft')
+      const dest = publish ? '/my/listings?submitted=1' : '/my/listings?tab=draft'
+      router.push(photoWarning ? `${dest}&photo_warning=${encodeURIComponent(photoWarning)}` : dest)
     } catch {
       setError('Network error — please check your connection and try again.')
     } finally {
@@ -415,13 +431,13 @@ export default function NewListingPage() {
 
             <div className="flex gap-3">
               <button type="button" onClick={() => setStep(2)} className="btn-secondary flex-1">{t.back2}</button>
-              <button type="button" onClick={() => handleSubmit(false)} disabled={!canPublish}
+              <button type="button" onClick={() => handleSubmit(false)} disabled={!canPublish || loading}
                 className="btn-secondary flex-1">
-                {loading ? '...' : t.saveDraft}
+                {uploadingPhotos ? t.uploadingPhotos : loading ? '...' : t.saveDraft}
               </button>
-              <button type="button" onClick={() => handleSubmit(true)} disabled={!canPublish}
+              <button type="button" onClick={() => handleSubmit(true)} disabled={!canPublish || loading}
                 className="btn-primary flex-1">
-                {loading ? t.submitting : t.submitReview}
+                {uploadingPhotos ? t.uploadingPhotos : loading ? t.submitting : t.submitReview}
               </button>
             </div>
           </div>

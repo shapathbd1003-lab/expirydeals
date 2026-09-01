@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    await sendPasswordResetEmail(user.email, token)
+    await sendPasswordResetEmail(email.toLowerCase(), token)
     return ok(msg)
   } catch (e) {
     console.error(e)

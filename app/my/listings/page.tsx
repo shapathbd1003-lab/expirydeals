@@ -170,11 +170,13 @@ function MyListingsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const submittedFromUrl = searchParams.get('submitted') === '1'
+  const photoWarningFromUrl = searchParams.get('photo_warning') || ''
   const searchParamTab = searchParams.get('tab') as typeof STATUS_TABS[number] | null
   const [tab, setTab] = useState<typeof STATUS_TABS[number]>(submittedFromUrl ? 'pending' : (searchParamTab && STATUS_TABS.includes(searchParamTab as any) ? searchParamTab : 'active'))
   // Captured once at mount so later actions on this page (e.g. deleting the
   // just-submitted listing) don't leave a stale banner tied to the URL forever
   const [showSubmitted, setShowSubmitted] = useState(submittedFromUrl)
+  const [photoWarning, setPhotoWarning] = useState(photoWarningFromUrl)
   const [listings, setListings] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [actionModal, setActionModal] = useState<{ listing: any; mode: 'sold' | 'delete' } | null>(null)
@@ -183,10 +185,11 @@ function MyListingsContent() {
     if (!authLoading && !user) router.push('/login')
   }, [user, authLoading, router])
 
-  // Clean the ?submitted=1 param off the URL once shown, so refreshing or
-  // navigating back doesn't re-trigger it
+  // Clean the ?submitted=1 / ?photo_warning=... params off the URL once shown,
+  // so refreshing or navigating back doesn't re-trigger them
   useEffect(() => {
     if (submittedFromUrl) router.replace('/my/listings?tab=pending', { scroll: false })
+    else if (photoWarningFromUrl) router.replace(`/my/listings?tab=${tab}`, { scroll: false })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -246,6 +249,13 @@ function MyListingsContent() {
         <div className="bg-green-50 border border-green-300 rounded-xl p-4 mb-6 text-sm text-green-800">
           <p className="font-semibold mb-1">{t.submittedTitle}</p>
           <p>{t.submittedBody}</p>
+        </div>
+      )}
+
+      {photoWarning && (
+        <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-4 mb-6 text-sm text-yellow-800 flex items-start justify-between gap-3">
+          <p>⚠️ {photoWarning}</p>
+          <button onClick={() => setPhotoWarning('')} className="text-yellow-600 hover:text-yellow-800 flex-shrink-0">✕</button>
         </div>
       )}
 

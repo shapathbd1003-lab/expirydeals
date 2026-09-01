@@ -2,7 +2,9 @@ import { prisma } from '@/lib/prisma'
 import { ok, serverError } from '@/lib/response'
 import { startOfToday } from '@/lib/slugify'
 
-export const revalidate = 300 // cache 5 minutes
+// Force per-request execution — without this, Next.js statically freezes the
+// response (and "today") at build/deploy time since no dynamic APIs are read.
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
@@ -16,7 +18,9 @@ export async function GET() {
           ],
         },
       }),
-      prisma.listing.count({ where: { status: { not: 'deleted' } } }),
+      // "Products Listed" = ever actually published (excludes drafts never
+      // submitted and pending items still awaiting admin approval)
+      prisma.listing.count({ where: { status: { notIn: ['deleted', 'draft', 'pending'] } } }),
     ])
     return ok({ active_listings, total_listings })
   } catch (e) {

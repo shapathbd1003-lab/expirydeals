@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       }),
     ])
 
-    const accessToken = generateAccessToken({ userId: user.id, role: user.role, email: user.email })
+    const accessToken = generateAccessToken({ userId: user.id, role: user.role, email: user.email ?? '' })
 
     const res = NextResponse.json({ success: true, data: { access_token: accessToken, expires_in: 900 } })
     res.cookies.set(setRefreshTokenCookie(newRefreshToken))

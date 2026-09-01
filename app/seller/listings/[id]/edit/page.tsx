@@ -5,6 +5,7 @@ import { useLang } from '@/hooks/useLang'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { LocationPicker } from '@/components/LocationPicker'
+import { compressImageFiles } from '@/lib/image-compress'
 
 const MIN_DESCRIPTION_LENGTH = 15
 
@@ -36,6 +37,7 @@ const T = {
     newFileCount: (n: number) => `${n} new file(s) selected`,
     urlPlaceholder: 'Paste image URL starting with https://', addAnotherUrl: '+ Add another URL',
     saveChanges: 'Save Changes', saving: 'Saving...', cancel: 'Cancel',
+    uploadingPhotos: '📷 Uploading photos...',
   },
   bn: {
     myAds: '← আমার বিজ্ঞাপন', title: 'বিজ্ঞাপন সম্পাদনা করুন',
@@ -52,6 +54,7 @@ const T = {
     newFileCount: (n: number) => `${n}টি নতুন ফাইল নির্বাচিত`,
     urlPlaceholder: 'https:// দিয়ে শুরু হওয়া ছবির লিংক পেস্ট করুন', addAnotherUrl: '+ আরেকটি লিংক যোগ করুন',
     saveChanges: 'পরিবর্তন সংরক্ষণ করুন', saving: 'সংরক্ষণ হচ্ছে...', cancel: 'বাতিল',
+    uploadingPhotos: '📷 ছবি আপলোড হচ্ছে...',
   },
 }
 
@@ -70,6 +73,7 @@ export default function EditListingPage() {
   const [newPreviews, setNewPreviews] = useState<string[]>([])
   const [photoTab, setPhotoTab] = useState<'upload' | 'url'>('upload')
   const [saving, setSaving] = useState(false)
+  const [uploadingPhotos, setUploadingPhotos] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -141,33 +145,45 @@ export default function EditListingPage() {
       const data = await res.json()
       if (!res.ok) { setError(data.error?.message || data.message || 'Failed to save'); return }
 
-      // Save PC files as data URLs (no storage service needed)
+      let photoWarning = ''
+
+      // Save PC files as data URLs (no storage service needed), resized/compressed
+      // first so slow connections aren't sending full-resolution photos as base64
       if (newFiles.length > 0) {
-        const dataUrls = await Promise.all(newFiles.map(f => new Promise<string>((resolve, reject) => {
-          const reader = new FileReader()
-          reader.onload = e => resolve(e.target?.result as string)
-          reader.onerror = reject
-          reader.readAsDataURL(f)
-        })))
-        await fetch(`/api/seller/listings/${id}/photo-urls`, {
-          method: 'POST',
-          headers: { ...headers, 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ urls: dataUrls }),
-        })
+        setUploadingPhotos(true)
+        try {
+          const dataUrls = await compressImageFiles(newFiles)
+          const controller = new AbortController()
+          const timeout = setTimeout(() => controller.abort(), 60000)
+          const photoRes = await fetch(`/api/seller/listings/${id}/photo-urls`, {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ urls: dataUrls }),
+            signal: controller.signal,
+          })
+          clearTimeout(timeout)
+          if (!photoRes.ok) photoWarning = lang === 'bn' ? 'পরিবর্তন সংরক্ষিত হয়েছে, কিন্তু ছবি আপলোড ব্যর্থ হয়েছে — আবার চেষ্টা করুন।' : 'Changes saved, but photo upload failed — try again.'
+        } catch {
+          photoWarning = lang === 'bn' ? 'পরিবর্তন সংরক্ষিত হয়েছে, কিন্তু ছবি আপলোড ব্যর্থ হয়েছে (ধীর সংযোগ) — আবার চেষ্টা করুন।' : 'Changes saved, but photo upload failed (connection too slow) — try again.'
+        } finally {
+          setUploadingPhotos(false)
+        }
       }
 
       // Save new image URLs if any
       const validUrls = imageUrls.filter(u => u.trim().startsWith('http'))
       if (validUrls.length > 0) {
-        await fetch(`/api/seller/listings/${id}/photo-urls`, {
+        const urlRes = await fetch(`/api/seller/listings/${id}/photo-urls`, {
           method: 'POST',
           headers: { ...headers, 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({ urls: validUrls }),
         })
+        if (!urlRes.ok) photoWarning = lang === 'bn' ? 'পরিবর্তন সংরক্ষিত হয়েছে, কিন্তু ছবির লিংক সংরক্ষণ ব্যর্থ হয়েছে।' : 'Changes saved, but photo URLs failed to save.'
       }
 
+      if (photoWarning) { setError(photoWarning); return }
       router.push('/my/listings')
     } finally {
       setSaving(false)
@@ -358,7 +374,7 @@ export default function EditListingPage() {
 
         <div className="flex gap-3 pt-2">
           <button type="submit" disabled={saving} className="btn-primary disabled:opacity-50">
-            {saving ? t.saving : t.saveChanges}
+            {uploadingPhotos ? t.uploadingPhotos : saving ? t.saving : t.saveChanges}
           </button>
           <Link href="/my/listings" className="btn-secondary">{t.cancel}</Link>
         </div>

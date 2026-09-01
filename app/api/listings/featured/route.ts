@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { okCached, serverError } from '@/lib/response'
+import { ok, serverError } from '@/lib/response'
 import { daysRemaining, startOfToday } from '@/lib/slugify'
 
 // Force per-request execution — without this, Next.js statically freezes the
@@ -33,7 +33,7 @@ function mapListing(l: any) {
   }
 }
 
-// Public + edge-cached: own-listing filtering happens client-side on the homepage
+// Public, always fresh: own-listing filtering happens client-side on the homepage
 export async function GET(req: NextRequest) {
   try {
     const rawType = req.nextUrl.searchParams.get('type') || 'near_expiry'
@@ -66,10 +66,10 @@ export async function GET(req: NextRequest) {
         : Promise.resolve([]),
     ])
 
-    return okCached({
+    return ok({
       just_added: justAdded.map(mapListing),
       expiring_soon: expiringSoon.map(mapListing),
-    }, 60)
+    })
   } catch (e) {
     console.error(e)
     return serverError()
