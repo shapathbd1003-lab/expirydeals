@@ -1,11 +1,15 @@
 import { NextRequest } from 'next/server'
-import sharp from 'sharp'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 import { ok, notFound, unauthorized, validationError, serverError } from '@/lib/response'
 
-// Compress a base64 data URL to a small webp data URL so list APIs stay light
+// Compress a base64 data URL to a small webp data URL so list APIs stay light.
+// sharp is imported lazily (not at module top-level) so that if its native
+// binding fails to load in this runtime, the failure happens inside the
+// caller's try/catch and falls back to storing the original image instead of
+// crashing the whole route before any error handling can run.
 async function compressDataUrl(dataUrl: string, width: number, quality: number): Promise<string> {
+  const sharp = (await import('sharp')).default
   const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1)
   const buf = Buffer.from(base64, 'base64')
   const out = await sharp(buf).rotate().resize({ width, withoutEnlargement: true }).webp({ quality }).toBuffer()

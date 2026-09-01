@@ -1,5 +1,4 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
-import sharp from 'sharp'
 import { v4 as uuidv4 } from 'uuid'
 import path from 'path'
 import fs from 'fs/promises'
@@ -58,6 +57,7 @@ export async function uploadListingPhoto(
   imageBuffer: Buffer,
   listingId: string
 ): Promise<UploadResult> {
+  const sharp = (await import('sharp')).default
   const fileId = uuidv4()
   const thumbKey = `listings/${listingId}/${fileId}-thumb.webp`
   const mediumKey = `listings/${listingId}/${fileId}-medium.webp`
@@ -87,6 +87,7 @@ export async function uploadListingPhoto(
 }
 
 export async function uploadAvatar(imageBuffer: Buffer, userId: string): Promise<string> {
+  const sharp = (await import('sharp')).default
   const fileId = uuidv4()
   const key = `users/avatars/${userId}/${fileId}.webp`
 
