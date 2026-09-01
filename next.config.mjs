@@ -13,6 +13,17 @@ const nextConfig = {
       { protocol: 'https', hostname: 'images.unsplash.com' },
     ],
   },
+  experimental: {
+    // sharp's libvips-cpp.so is loaded via dlopen at runtime, which
+    // Next.js's static file tracer can't detect — without this, Vercel
+    // drops it from the deployed function and sharp throws ERR_DLOPEN_FAILED.
+    outputFileTracingIncludes: {
+      '/api/seller/listings/**': [
+        './node_modules/@img/sharp-libvips-linux-x64/**/*',
+        './node_modules/@img/sharp-linux-x64/**/*',
+      ],
+    },
+  },
 }
 
 export default nextConfig;

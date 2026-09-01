@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
-import { notFound, unauthorized, validationError, serverError } from '@/lib/response'
+import { ok, notFound, unauthorized, validationError, serverError } from '@/lib/response'
 
 // Compress a base64 data URL to a small webp data URL so list APIs stay light.
 // sharp is imported lazily (not at module top-level) so that if its native
@@ -65,10 +65,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         try {
           urlThumb = await compressDataUrl(url, 400, 70)
           urlMedium = await compressDataUrl(url, 900, 75)
-        } catch (err: any) {
+        } catch (err) {
           console.error('Photo compression failed, storing original:', err)
-          // TEMP DIAGNOSTIC — remove after root-causing the Vercel sharp failure
-          ;(global as any).__lastCompressionError = { message: err?.message, stack: err?.stack, code: err?.code }
         }
       }
       const photo = await prisma.listingPhoto.create({
@@ -84,13 +82,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       created.push(photo)
     }
 
-    // TEMP DIAGNOSTIC — remove after root-causing the Vercel sharp failure
-    const debugCompressionError = (global as any).__lastCompressionError
-    const res = NextResponse.json({ success: true, data: created }, { status: 201 })
-    if (debugCompressionError) {
-      res.headers.set('X-Debug-Compression-Error', encodeURIComponent(JSON.stringify(debugCompressionError)).slice(0, 4000))
-    }
-    return res
+    return ok(created, 201)
   } catch (e) {
     console.error(e)
     return serverError()
