@@ -107,8 +107,8 @@ export default function BuyerProfilePage() {
           <input className="input" value={form.fullName} onChange={e => set('fullName', e.target.value)} required />
         </div>
         <div>
-          <label className="label">{t.phone}</label>
-          <input className="input" placeholder="01XXXXXXXXX" value={form.phone} onChange={e => set('phone', e.target.value)} />
+          <label className="label">{t.phone} *</label>
+          <input className="input" placeholder="01XXXXXXXXX" required value={form.phone} onChange={e => set('phone', e.target.value)} />
         </div>
         <div>
           <label className="label">{t.storeName} <span className="text-gray-400 font-normal">{t.storeNameHint}</span></label>

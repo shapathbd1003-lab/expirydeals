@@ -69,8 +69,8 @@ function RegisterForm() {
           value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
       </div>
       <div>
-        <label htmlFor="reg-phone" className="label">{t.phone}</label>
-        <input id="reg-phone" type="tel" className="input" placeholder="01XXXXXXXXX"
+        <label htmlFor="reg-phone" className="label">{t.phone} *</label>
+        <input id="reg-phone" type="tel" required className="input" placeholder="01XXXXXXXXX"
           value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
       </div>
       <div>

@@ -24,8 +24,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { email, password, full_name, phone } = body
 
-    if (!email || !password || !full_name) {
-      return validationError('email, password, and full_name are required')
+    if (!email || !password || !full_name || !phone) {
+      return validationError('email, password, full_name, and phone are required')
     }
     if (password.length < 8) {
       return validationError('password must be at least 8 characters')
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
         passwordHash,
         role: 'user',
         fullName: full_name,
-        phone: phone || null,
+        phone: phone,
         status: 'active',
         emailVerified: true,
       },

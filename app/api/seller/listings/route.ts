@@ -79,6 +79,12 @@ export async function POST(req: NextRequest) {
     const auth = await requireAuth(req)
     if ('error' in auth) return unauthorized()
 
+    // Enforce phone requirement before allowing listing creation
+    const seller = await prisma.user.findUnique({ where: { id: auth.user.userId }, select: { phone: true } })
+    if (!seller?.phone) {
+      return validationError('You must add a phone number to your profile before posting an item. Go to Profile → update your phone number.')
+    }
+
     const body = await req.json()
     const {
       title, category_id, description, original_price, discounted_price,
